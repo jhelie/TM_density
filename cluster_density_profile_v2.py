@@ -1614,8 +1614,50 @@ def calculate_density(box_dim):											#DONE
 				if args.cluster_groups_file != "no":
 					groups_nb_clusters[g_index] += 1
 	
-				#get z coord of cluster center of geometry
+				#get coord of cluster center of geometry
 				cluster_cog = calculate_cog(tmp_c_sele_coordinates, box_dim)
+
+				#calculate local normal to bilayer
+				#---------------------------------
+				if args.normal != 'z':
+					#identify neighbouring particles in each leaflet
+					#upper
+					tmp_lip_coords_up = tmp_lip_coords["upper"] - cluster_cog
+					tmp_lip_coords_up[:,0] -= (np.floor(2*tmp_lip_coords_up[:,0]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_up[:,0]))/float(2)) * box_dim[0]
+					tmp_lip_coords_up[:,1] -= (np.floor(2*tmp_lip_coords_up[:,1]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_up[:,1]))/float(2)) * box_dim[1]
+					tmp_lip_coords_up[:,2] -= (np.floor(2*tmp_lip_coords_up[:,2]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_up[:,2]))/float(2)) * box_dim[2]
+					tmp_lip_coords_up_within = tmp_lip_coords_up[tmp_lip_coords_up[:,0]**2 + tmp_lip_coords_up[:,1]**2 + tmp_lip_coords_up[:,2]**2 < args.normal_d**2]
+					if np.shape(tmp_lip_coords_up_within)[0] == 0:
+						print "\nWarning: no neighbouring particles found in the upper leaflet for current cluster. Check the --normal_d option.\n"
+						continue
+					else:
+						cog_up = np.average(tmp_lip_coords_up_within, axis = 0)
+					#lower
+					tmp_lip_coords_lw = tmp_lip_coords["lower"] - cluster_cog
+					tmp_lip_coords_lw[:,0] -= (np.floor(2*tmp_lip_coords_lw[:,0]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_lw[:,0]))/float(2)) * box_dim[0]
+					tmp_lip_coords_lw[:,1] -= (np.floor(2*tmp_lip_coords_lw[:,1]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_lw[:,1]))/float(2)) * box_dim[1]
+					tmp_lip_coords_lw[:,2] -= (np.floor(2*tmp_lip_coords_lw[:,2]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_lw[:,2]))/float(2)) * box_dim[2]
+					tmp_lip_coords_lw_within = tmp_lip_coords_lw[tmp_lip_coords_lw[:,0]**2 + tmp_lip_coords_lw[:,1]**2 + tmp_lip_coords_lw[:,2]**2 < args.normal_d**2]
+					if np.shape(tmp_lip_coords_lw_within)[0] == 0:
+						print "\nWarning: no neighbouring particles found in the lower leaflet for current cluster. Check the --normal_d option.\n"
+						continue
+					else:
+						cog_lw = np.average(tmp_lip_coords_lw_within, axis = 0)
+
+					#identify normal vector: case cog
+					if args.normal == 'cog':
+						norm_vec = cop_up - cog_lw
+						norm_vec /= float(np.linalg.norm(norm_vec))
+					#identify normal vector: case svd
+					else:
+						tmp_lip_coords_within = np.concatenate((tmp_lip_coords_up-cog_up,tmp_lip_coords_lw-cog_lw))
+						svd_U, svd_D, svd_V = np.linalg.svd(tmp_lip_coords_within)
+						norm_vec = svd_V[2]
+						#TO DO: include a check to make sure that svd_V[2] has same orientation than cog_up - cog_lw
+
+					#identify rotation matrix
+					norm_rot
+				
 										
 				#density profile: particles
 				#--------------------------
@@ -1634,7 +1676,7 @@ def calculate_density(box_dim):											#DONE
 						#center cluster z coordinates on the bilayer center z coordinate
 						tmp_coord[:,2] -= z_middle_instant
 					
-						#deal with pbc and center axis on 0
+						#deal with pbc (with the cluster coords set at 0 the coords indirectly represent distances so need to use their 'minimum' absolute values)
 						# -> we test if we are further away from 0 than half the box dim, if so we translate by a box dim.
 						# -> the only trick is that for negative coord floor returns a number offset by 1 compared to what we'd like (-1 = within range, -2 - outside), so we need to add +1 to this for negative coord (hence the bit with sign)
 						tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
