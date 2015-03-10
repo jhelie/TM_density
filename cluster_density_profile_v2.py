@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.0.22"
+version_nb = "0.0.0"
 parser = argparse.ArgumentParser(prog = 'cluster_density_profile_v2', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 *********************************************************
@@ -214,6 +214,23 @@ The following python modules are needed :
     -boundaries are inclusive so you can specify one size groups with 'size,size,colour'
     -any cluster size not covered will be labeled as 'other'
  
+5. There are 3 possible options to determine the local normal to the bilayer. These are
+   controlled with the flags --normal and --normal_d:
+   (a) 'z': the bilayer is assumed flat in the x,y plane and the z axis is taken to be the
+    normal. Best for systems without significant curvature and local deformations. In this
+    case the --normal_d flag is ignored.
+
+   (b) 'cog': in this case neighbourhing particles to current cluster of interest are
+    identified in the lower and upper leaflet. The local normal is then considered to be the
+    vector going from the cog of the lower ones to the cog of the upper ones. In each leaflet,
+    neighbouring particles are the particles selected by --beads which are within --normal_d
+    Angstrom of the cog of the protein cluster of interest.
+
+   (c) 'svd': in this case neighbourhing particles to current cluster of interest are
+    identified in the lower and upper leaflet as in (b) above. The normal of the best fitting
+    plane to these particles is obtained by performing a singular value decomposition of their
+    coordinate matrix.
+
  
 [ USAGE ]
 
@@ -233,6 +250,8 @@ Density profile options
 --charges		: definition of charged particles, see 'DESCRIPTION' 
 --slices_thick	0.5 	: z thickness of the slices (Angstrom)
 --slices_radius	30 	: radius of the slices (Angstrom)
+--normal	z	: local normal to bilayer ('z', 'cog' or 'svd'), see note 5
+--normal_d	30	: distance of points to take into account for local normal, see note 5
 
 Lipids identification  
 -----------------------------------------------------
@@ -271,6 +290,8 @@ parser.add_argument('--residues', nargs=1, dest='residuesfilename', default=['mi
 parser.add_argument('--charges', nargs=1, dest='chargesfilename', default=['mine'], help=argparse.SUPPRESS)
 parser.add_argument('--slices_thick', nargs=1, dest='slices_thick', default=[0.5], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--slices_radius', nargs=1, dest='slices_radius', default=[30], type=float, help=argparse.SUPPRESS)
+parser.add_argument('--normal', dest='normal', choices=['z','cog','svd'], default='z', help=argparse.SUPPRESS)
+parser.add_argument('--normal_d', nargs=1, dest='normal_d', default=[30], type=float, help=argparse.SUPPRESS)
 
 #lipids identification options
 parser.add_argument('--beads', nargs=1, dest='beadsfilename', default=['no'], help=argparse.SUPPRESS)
@@ -308,6 +329,7 @@ args.residuesfilename = args.residuesfilename[0]
 args.chargesfilename = args.chargesfilename[0]
 args.slices_thick = args.slices_thick[0]
 args.slices_radius = args.slices_radius[0]
+args.normal_d = args.normal_d[0]
 #lipids identification options
 args.beadsfilename = args.beadsfilename[0]
 args.cutoff_leaflet = args.cutoff_leaflet[0]
@@ -401,6 +423,9 @@ if args.chargesfilename != "no" and args.chargesfilename != "mine" and not os.pa
 	sys.exit(1)
 if args.t_end != -1 and args.t_end < args.t_start:
 	print "Error: the starting time (" + str(args.t_start) + "ns) for analysis is later than the ending time (" + str(args.t_end) + "ns)."
+	sys.exit(1)
+if args.normal != 'z' and args.normal_d <= 0:
+	print "Error: --normal_d (" + str(args.normal__d) + " AA) should be greater 0. Or choose 'z' for --normal, see note 5."
 	sys.exit(1)
 
 if args.xtcfilename == "no":
