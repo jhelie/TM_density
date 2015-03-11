@@ -1472,6 +1472,8 @@ def calculate_density(box_dim):											#DONE
 	
 	global sizes_sampled
 	global groups_sampled
+	loc_z_axis = np.array([0,0,1])
+	loc_z_axis = loc_z_axis.reshape((3,1))
 	
 	#retrieve coordinates arrays (pre-processing saves time as MDAnalysis functions are quite slow and we need to make such calls a few times)
 	tmp_lip_coords = {l: leaflet_sele[l].coordinates() for l in ["lower","upper"]}
@@ -1646,19 +1648,43 @@ def calculate_density(box_dim):											#DONE
 
 					#identify normal vector: case cog
 					if args.normal == 'cog':
-						norm_vec = cop_up - cog_lw
+						norm_vec = cog_up - cog_lw
 						norm_vec /= float(np.linalg.norm(norm_vec))
+						norm_vec = norm_vec.reshape((3,1))
 					#identify normal vector: case svd
 					else:
 						tmp_lip_coords_within = np.concatenate((tmp_lip_coords_up-cog_up,tmp_lip_coords_lw-cog_lw))
 						svd_U, svd_D, svd_V = np.linalg.svd(tmp_lip_coords_within)
-						norm_vec = svd_V[2]
-						#TO DO: include a check to make sure that svd_V[2] has same orientation than cog_up - cog_lw
+						norm_vec = svd_V[2].reshape((3,1))
+						#check the normal vector goes from inside (lower) to outside (upper)
+						tmp_delta_cog = cog_up - cog_lw
+						tmp_delta_cog = tmp_delta_cog.reshape((3,1))
+						if np.dot(norm_vec[:,0],tmp_delta_cog[:,0]):
+							norm_vec *= -1
+							#debug
+							print "local normal direction reversed"
 
 					#identify rotation matrix
-					norm_rot
+					norm_ax = np.cross(loc_z_axis,norm_vec)
+					norm_cos = np.dot(loc_z_axis[:,0],norm_vec[:,0])
+					norm_sin = np.linalg.norm(norm_ax)
+					norm_ax_skew_sym = norm_vec*loc_z_axis.T - loc_z_axis*normal.T
+					norm_rot = np.identity(3) - norm_ax_skew_sym + (1-norm_cos)/float(norm_sin**2)*np.dot(norm_ax_skew_sym,norm_ax_skew_sym)
 				
-										
+					#identify z coord of local middle of bilayer after rotation
+					tmp_lip_coords_up_within_rotated = np.dot(norm_rot, tmp_lip_coords_up_within.T).T
+					tmp_lip_coords_lw_within_rotated = np.dot(norm_rot, tmp_lip_coords_lw_within.T).T
+					cog_up_rotated = calculate_cog(tmp_lip_coords_up_within_rotated, box_dim)
+					cog_lw_rotated = calculate_cog(tmp_lip_coords_lw_within_rotated, box_dim)
+					norm_z_middle = cog_lw_rotated[2] + (cog_up_rotated[2] - cog_lw_rotated[2])/float(2)
+					
+					#debug
+					print "\ndebug: "
+					print "loc normal", norm_vec
+					print "after rotation:", np.dot(norm_rot,norm_vec)
+				else:
+					norm_z_middle = z_middle_instant
+											
 				#density profile: particles
 				#--------------------------
 				for part in particles_def["labels"]:
@@ -1668,13 +1694,20 @@ def calculate_density(box_dim):											#DONE
 						tmp_part_sele = particles_def["sele"][part]
 					if tmp_part_sele.numberOfAtoms() > 0:
 						
-						#center cluster (x,y) coordinates on its cog (x,y) coordinates
+						#retrieve original coordinates
 						tmp_coord = tmp_part_sele.coordinates()
+						
+						#rotate coordinates so that the local normal of the bilayer is // to the z axis
+						if args.normal != 'z':
+							tmp_coord = np.dot(norm_rot, tmp_coord.T).T
+							cluster_cog = calculate_cog(tmp_coord, box_dim)
+						
+						#center cluster (x,y) coordinates on its cog (x,y) coordinates
 						tmp_coord[:,0] -= cluster_cog[0]
 						tmp_coord[:,1] -= cluster_cog[1]
 										
 						#center cluster z coordinates on the bilayer center z coordinate
-						tmp_coord[:,2] -= z_middle_instant
+						tmp_coord[:,2] -= norm_z_middle
 					
 						#deal with pbc (with the cluster coords set at 0 the coords indirectly represent distances so need to use their 'minimum' absolute values)
 						# -> we test if we are further away from 0 than half the box dim, if so we translate by a box dim.
@@ -1718,13 +1751,20 @@ def calculate_density(box_dim):											#DONE
 						tmp_res_sele = c_sele.selectAtoms(residues_def["sele_string"][res])
 						if tmp_res_sele.numberOfAtoms() > 0:
 							
-							#center cluster (x,y) coordinates on its cog (x,y) coordinates
+							#retrieve original coordinates
 							tmp_coord = tmp_res_sele.coordinates()
+							
+							#rotate coordinates so that the local normal of the bilayer is // to the z axis
+							if args.normal != 'z':
+								tmp_coord = np.dot(norm_rot, tmp_coord.T).T
+								cluster_cog = calculate_cog(tmp_coord, box_dim)
+
+							#center cluster (x,y) coordinates on its cog (x,y) coordinates
 							tmp_coord[:,0] -= cluster_cog[0]
 							tmp_coord[:,1] -= cluster_cog[1]
 											
 							#center cluster z coordinates on the bilayer center z coordinate
-							tmp_coord[:,2] -= z_middle_instant
+							tmp_coord[:,2] -= norm_z_middle
 						
 							#deal with pbc and center axis on 0
 							tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
@@ -1770,13 +1810,20 @@ def calculate_density(box_dim):											#DONE
 								tmp_q_sele = charges_groups[charge_g]["sele"][q]
 							if tmp_q_sele.numberOfAtoms() > 0:
 													
-								#center cluster coordinates on the (x,y) coordinates of its cog
+								#retrieve original coordinates
 								tmp_coord = tmp_q_sele.coordinates()
+								
+								#rotate coordinates so that the local normal of the bilayer is // to the z axis
+								if args.normal != 'z':
+									tmp_coord = np.dot(norm_rot, tmp_coord.T).T
+									cluster_cog = calculate_cog(tmp_coord, box_dim)
+
+								#center cluster coordinates on the (x,y) coordinates of its cog
 								tmp_coord[:,0] -= cluster_cog[0]
 								tmp_coord[:,1] -= cluster_cog[1]
 							
 								#center cluster z coordinates on the bilayer center z coordinate
-								tmp_coord[:,2] -= z_middle_instant
+								tmp_coord[:,2] -= norm_z_middle
 		
 								#deal with pbc and center axis on 0
 								tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
