@@ -246,6 +246,7 @@ Option	      Default  	Description
 Density profile options
 -----------------------------------------------------
 --range		40 	: distance spanned on either side of the bilayer center
+--particles		: definition of particles, see 'DESCRIPTION'
 --types			: definition of residue groups, see 'DESCRIPTION'
 --charges		: definition of charged particles, see 'DESCRIPTION' 
 --slices_thick	0.5 	: z thickness of the slices (Angstrom)
@@ -603,7 +604,9 @@ def set_particles():													#DONE
 	#use default particles definition
 	#--------------------------------
 	if args.particlesfilename == "mine":
-		particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
+		#particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
+		#debug
+		particles_def["labels"] = ["peptide"]
 		
 		#peptide
 		particles_def["group"]["peptide"] = "peptide"					#very dark grey
@@ -611,31 +614,31 @@ def set_particles():													#DONE
 		particles_def["sele_string"]["peptide"] = "protein"
 	
 		#lipids
-		particles_def["group"]["CHOL"] = "CHOL"
-		particles_def["group"]["POPC"] = "POPC"
-		particles_def["group"]["POPE"] = "POPE"
-		particles_def["group"]["POPS"] = "POPS"
-		particles_def["colour"]["CHOL"] = "#bdbdbd"						#light grey
-		particles_def["colour"]["POPC"] = "#41ab5d"						#dark green
-		particles_def["colour"]["POPE"] = "#6a51a3"						#dark purple
-		particles_def["colour"]["POPS"] = "#cc4c02"						#dark orange
-		particles_def["sele_string"]["POPC"] = "resname POPC and name PO4"		
-		particles_def["sele_string"]["POPE"] = "resname POPE and name PO4"
-		particles_def["sele_string"]["POPS"] = "resname POPS and name PO4"
-		particles_def["sele_string"]["CHOL"] = "resname CHOL and name ROH"
+		#particles_def["group"]["CHOL"] = "CHOL"
+		#particles_def["group"]["POPC"] = "POPC"
+		#particles_def["group"]["POPE"] = "POPE"
+		#particles_def["group"]["POPS"] = "POPS"
+		#particles_def["colour"]["CHOL"] = "#bdbdbd"						#light grey
+		#particles_def["colour"]["POPC"] = "#41ab5d"						#dark green
+		#particles_def["colour"]["POPE"] = "#6a51a3"						#dark purple
+		#particles_def["colour"]["POPS"] = "#cc4c02"						#dark orange
+		#particles_def["sele_string"]["POPC"] = "resname POPC and name PO4"		
+		#particles_def["sele_string"]["POPE"] = "resname POPE and name PO4"
+		#particles_def["sele_string"]["POPS"] = "resname POPS and name PO4"
+		#particles_def["sele_string"]["CHOL"] = "resname CHOL and name ROH"
 
-		#solvent
-		particles_def["group"]["water"] = "water"
-		particles_def["colour"]["water"] = "#1d91c0"					#dark cyan
-		particles_def["sele_string"]["water"] = "resname W"
+		##solvent
+		#particles_def["group"]["water"] = "water"
+		#particles_def["colour"]["water"] = "#1d91c0"					#dark cyan
+		#particles_def["sele_string"]["water"] = "resname W"
 
-		#ions
-		particles_def["group"]["Na+"] = "Na+"
-		particles_def["group"]["Cl-"] = "CL-"
-		particles_def["colour"]["Cl-"] = "#fa9fb5"						#light red
-		particles_def["colour"]["Na+"] = "#7bccc4"						#light blue
-		particles_def["sele_string"]["Na+"] = "name NA+"
-		particles_def["sele_string"]["Cl-"] = "name CL-"
+		##ions
+		#particles_def["group"]["Na+"] = "Na+"
+		#particles_def["group"]["Cl-"] = "CL-"
+		#particles_def["colour"]["Cl-"] = "#fa9fb5"						#light red
+		#particles_def["colour"]["Na+"] = "#7bccc4"						#light blue
+		#particles_def["sele_string"]["Na+"] = "name NA+"
+		#particles_def["sele_string"]["Cl-"] = "name CL-"
 	
 	#use user's particles definition
 	#-------------------------------	
@@ -1665,10 +1668,10 @@ def calculate_density(box_dim):											#DONE
 							print "local normal direction reversed"
 
 					#identify rotation matrix
-					norm_ax = np.cross(loc_z_axis,norm_vec)
+					norm_ax = np.cross(loc_z_axis,norm_vec,axis=0)
 					norm_cos = np.dot(loc_z_axis[:,0],norm_vec[:,0])
 					norm_sin = np.linalg.norm(norm_ax)
-					norm_ax_skew_sym = norm_vec*loc_z_axis.T - loc_z_axis*normal.T
+					norm_ax_skew_sym = norm_vec*loc_z_axis.T - loc_z_axis*norm_vec.T
 					norm_rot = np.identity(3) - norm_ax_skew_sym + (1-norm_cos)/float(norm_sin**2)*np.dot(norm_ax_skew_sym,norm_ax_skew_sym)
 				
 					#identify z coord of local middle of bilayer after rotation
