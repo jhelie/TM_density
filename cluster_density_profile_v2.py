@@ -2760,7 +2760,7 @@ def density_graph_charges():											#DONE
 				else:
 					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_groups[g_index][charge_g], color = charges_colours[charge_g], label = str(charge_g))
 			plt.vlines(z_upper, min_density_charges, max_density_charges, linestyles = 'dashed')
-			plt.vlines(z_lower, max_density_charges, linestyles = 'dashed')
+			plt.vlines(z_lower, min_density_charges, max_density_charges, linestyles = 'dashed')
 			plt.vlines(0, min_density_charges, max_density_charges, linestyles = 'dashdot')
 			plt.hlines(0, -args.max_z_dist, args.max_z_dist)
 			fontP.set_size("small")
