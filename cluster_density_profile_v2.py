@@ -252,7 +252,7 @@ Density profile options
 --slices_thick	0.5 	: z thickness of the slices (Angstrom)
 --slices_radius	30 	: radius of the slices (Angstrom)
 --normal	z	: local normal to bilayer ('z', 'cog' or 'svd'), see note 5
---normal_d	30	: distance of points to take into account for local normal, see note 5
+--normal_d	60	: distance of points to take into account for local normal, see note 5
 
 Lipids identification  
 -----------------------------------------------------
@@ -292,7 +292,7 @@ parser.add_argument('--charges', nargs=1, dest='chargesfilename', default=['mine
 parser.add_argument('--slices_thick', nargs=1, dest='slices_thick', default=[0.5], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--slices_radius', nargs=1, dest='slices_radius', default=[30], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--normal', dest='normal', choices=['z','cog','svd'], default='z', help=argparse.SUPPRESS)
-parser.add_argument('--normal_d', nargs=1, dest='normal_d', default=[30], type=float, help=argparse.SUPPRESS)
+parser.add_argument('--normal_d', nargs=1, dest='normal_d', default=[60], type=float, help=argparse.SUPPRESS)
 
 #lipids identification options
 parser.add_argument('--beads', nargs=1, dest='beadsfilename', default=['no'], help=argparse.SUPPRESS)
@@ -1659,13 +1659,11 @@ def calculate_density(box_dim):											#DONE
 						tmp_lip_coords_within = np.concatenate((tmp_lip_coords_up-cog_up,tmp_lip_coords_lw-cog_lw))
 						svd_U, svd_D, svd_V = np.linalg.svd(tmp_lip_coords_within)
 						norm_vec = svd_V[2].reshape((3,1))
-						#check the normal vector goes from inside (lower) to outside (upper)
+						#orientate the normal vector so that it goes from inside (lower) to outside (upper)
 						tmp_delta_cog = cog_up - cog_lw
 						tmp_delta_cog = tmp_delta_cog.reshape((3,1))
 						if np.dot(norm_vec[:,0],tmp_delta_cog[:,0]):
 							norm_vec *= -1
-							#debug
-							print "local normal direction reversed"
 
 					#identify rotation matrix
 					norm_ax = np.cross(loc_z_axis,norm_vec,axis=0)
@@ -1675,19 +1673,15 @@ def calculate_density(box_dim):											#DONE
 					norm_rot = np.identity(3) - norm_ax_skew_sym + (1-norm_cos)/float(norm_sin**2)*np.dot(norm_ax_skew_sym,norm_ax_skew_sym)
 				
 					#identify z coord of local middle of bilayer after rotation
-					tmp_lip_coords_up_within_rotated = np.dot(norm_rot, tmp_lip_coords_up_within.T).T
-					tmp_lip_coords_lw_within_rotated = np.dot(norm_rot, tmp_lip_coords_lw_within.T).T
+					tmp_lip_coords_up_within_rotated = np.dot(norm_rot, tmp_lip_coords["upper"].T).T
+					tmp_lip_coords_lw_within_rotated = np.dot(norm_rot, tmp_lip_coords["lower"].T).T
 					cog_up_rotated = calculate_cog(tmp_lip_coords_up_within_rotated, box_dim)
 					cog_lw_rotated = calculate_cog(tmp_lip_coords_lw_within_rotated, box_dim)
 					norm_z_middle = cog_lw_rotated[2] + (cog_up_rotated[2] - cog_lw_rotated[2])/float(2)
 					
-					#debug
-					print "\ndebug: "
-					print "loc normal", norm_vec
-					print "after rotation:", np.dot(norm_rot,norm_vec)
 				else:
 					norm_z_middle = z_middle_instant
-											
+									
 				#density profile: particles
 				#--------------------------
 				for part in particles_def["labels"]:
