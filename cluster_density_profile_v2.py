@@ -1480,13 +1480,13 @@ def calculate_density(box_dim, f_nb):									#DONE
 	tmp_lip_coords = {l: leaflet_sele[l].coordinates() for l in ["lower","upper"]}
 	
 	#calculate middle of bilayer and relative coordinate of upper and lower leaflets assuming the z is the normal to the bilayer
-	if args.normal != 'z':
-		tmp_zu = leaflet_sele["upper"].centerOfGeometry()[2]
-		tmp_zl = leaflet_sele["lower"].centerOfGeometry()[2]
-		tmp_z_mid = tmp_zl + (tmp_zu - tmp_zl)/float(2)
+	tmp_zu = leaflet_sele["upper"].centerOfGeometry()[2]
+	tmp_zl = leaflet_sele["lower"].centerOfGeometry()[2]
+	tmp_z_mid = tmp_zl + (tmp_zu - tmp_zl)/float(2)
+	if args.normal == 'z':
 		z_upper += tmp_zu - tmp_z_mid
 		z_lower += tmp_zl - tmp_z_mid
-		z_boundaries_nb_data +=1
+		z_boundaries_nb_data += 1
 	
 	#case: no proteins
 	#=================
@@ -1681,7 +1681,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 						#orientate the normal vector so that it goes from inside (lower) to outside (upper)
 						tmp_delta_cog = cog_up - cog_lw
 						tmp_delta_cog = tmp_delta_cog.reshape((3,1))
-						if np.dot(norm_vec[:,0],tmp_delta_cog[:,0]):
+						if np.dot(norm_vec[:,0],tmp_delta_cog[:,0]) < 0:
 							norm_vec *= -1
 
 					#identify rotation matrix
