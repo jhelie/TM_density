@@ -283,12 +283,12 @@ parser.add_argument('-o', nargs=1, dest='output_folder', default=['no'], help=ar
 parser.add_argument('-b', nargs=1, dest='t_start', default=[-1], type=int, help=argparse.SUPPRESS)
 parser.add_argument('-e', nargs=1, dest='t_end', default=[-1], type=int, help=argparse.SUPPRESS)
 parser.add_argument('-t', nargs=1, dest='frames_dt', default=[10], type=int, help=argparse.SUPPRESS)
-
-#density profile options
-parser.add_argument('--range', nargs=1, dest='max_z_dist', default=[40], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--particles', nargs=1, dest='particlesfilename', default=['mine'], help=argparse.SUPPRESS)
 parser.add_argument('--residues', nargs=1, dest='residuesfilename', default=['mine'], help=argparse.SUPPRESS)
 parser.add_argument('--charges', nargs=1, dest='chargesfilename', default=['mine'], help=argparse.SUPPRESS)
+
+#density profile options
+parser.add_argument('--range', nargs=1, dest='max_z_dist', default=[40], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--slices_thick', nargs=1, dest='slices_thick', default=[0.5], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--slices_radius', nargs=1, dest='slices_radius', default=[30], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--normal', dest='normal', choices=['z','cog','svd'], default='z', help=argparse.SUPPRESS)
@@ -323,11 +323,11 @@ args.output_folder = args.output_folder[0]
 args.t_start = args.t_start[0]
 args.t_end = args.t_end[0]
 args.frames_dt = args.frames_dt[0]
-#density profile options
-args.max_z_dist = args.max_z_dist[0]
 args.particlesfilename = args.particlesfilename[0]
 args.residuesfilename = args.residuesfilename[0]
 args.chargesfilename = args.chargesfilename[0]
+#density profile options
+args.max_z_dist = args.max_z_dist[0]
 args.slices_thick = args.slices_thick[0]
 args.slices_radius = args.slices_radius[0]
 args.normal_d = args.normal_d[0]
@@ -473,7 +473,7 @@ global bins_labels
 global slice_volume
 global protein_pres
 lipids_ff_nb = 0
-bins_nb = int(np.floor(args.max_z_dist/float(args.slices_thick))) 			#actually it's twice as that (-bins_nb,bins_nb) has to be filled
+bins_nb = int(np.floor(args.max_z_dist/float(args.slices_thick))) 			#actually it's twice that as (-bins_nb,bins_nb) has to be filled
 bins_nb_max = bins_nb
 bins_labels = [str((n+0.5)*args.slices_thick) for n in range(-bins_nb,bins_nb)]
 slice_volume = 2 * math.pi * args.slices_radius * args.slices_thick
@@ -2510,10 +2510,10 @@ def density_graph_particles():											#DONE
 		#plot data
 		ax = fig.add_subplot(111)
 		for part in particles_def["labels"]:
-			plt.plot(range(0,2*bins_nb), density_particles_sizes_pc[c_size][part], color = particles_def["colour"][part], label = str(part))
-		plt.vlines(np.floor(z_upper/float(args.slices_thick)) + bins_nb, 0, max_density_particles_pc, linestyles = 'dashed')
-		plt.vlines(np.floor(z_lower/float(args.slices_thick)) + bins_nb, 0, max_density_particles_pc, linestyles = 'dashed')
-		plt.vlines(bins_nb, 0, max_density_particles_pc, linestyles = 'dashdot')
+			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size][part], color = particles_def["colour"][part], label = str(part))
+		plt.vlines(z_upper, 0, max_density_particles_pc, linestyles = 'dashed')
+		plt.vlines(z_lower, 0, max_density_particles_pc, linestyles = 'dashed')
+		plt.vlines(0, 0, max_density_particles_pc, linestyles = 'dashdot')
 		fontP.set_size("small")
 		ax.legend(prop=fontP)
 		plt.xlabel('z distance to bilayer center [$\AA$]')
@@ -2528,10 +2528,6 @@ def density_graph_particles():											#DONE
 		ax.yaxis.set_ticks_position('left')
 		ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
 		ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
-		xlabel = ax.get_xticks().tolist()
-		for tick_index in range(0,len(xlabel)):
-			xlabel[tick_index] -= bins_nb
-		ax.set_xticklabels(xlabel)
 		ax.xaxis.labelpad = 20
 		ax.yaxis.labelpad = 20
 		plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
@@ -2556,17 +2552,17 @@ def density_graph_particles():											#DONE
 			#plot data
 			ax = fig.add_subplot(111)
 			for part in particles_def["labels"]:
-				plt.plot(range(0,2*bins_nb), density_particles_groups_pc[g_index][part], color = particles_def["colour"][part], label = str(part))
-			plt.vlines(np.floor(z_upper/float(args.slices_thick)) + bins_nb, 0, max_density_particles_pc, linestyles = 'dashed')
-			plt.vlines(np.floor(z_lower/float(args.slices_thick)) + bins_nb, 0, max_density_particles_pc, linestyles = 'dashed')
-			plt.vlines(bins_nb, 0, max_density_particles_pc, linestyles = 'dashdot')
+				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index][part], color = particles_def["colour"][part], label = str(part))
+			plt.vlines(z_upper, 0, max_density_particles_pc, linestyles = 'dashed')
+			plt.vlines(z_lower, 0, max_density_particles_pc, linestyles = 'dashed')
+			plt.vlines(0, 0, max_density_particles_pc, linestyles = 'dashdot')
 			fontP.set_size("small")
 			ax.legend(prop=fontP)
 			plt.xlabel('z distance to bilayer center [$\AA$]')
 			plt.ylabel('relative particles frequency [$\AA^{-3}$]')
 			
 			#save figure
-			ax.set_xlim(0, 2*bins_nb)
+			ax.set_xlim(-args.max_z_dist, args.max_z_dist)
 			ax.set_ylim(0, max_density_particles_pc)
 			ax.spines['top'].set_visible(False)
 			ax.spines['right'].set_visible(False)
@@ -2574,10 +2570,6 @@ def density_graph_particles():											#DONE
 			ax.yaxis.set_ticks_position('left')
 			ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
 			ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
-			xlabel = ax.get_xticks().tolist()
-			for tick_index in range(0,len(xlabel)):
-				xlabel[tick_index] -= bins_nb
-			ax.set_xticklabels(xlabel)
 			ax.xaxis.labelpad = 20
 			ax.yaxis.labelpad = 20
 			plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
@@ -2612,20 +2604,20 @@ def density_graph_residues():											#DONE
 		#plot data
 		ax = fig.add_subplot(111)
 		for res in residues_def["labels"]:
-			plt.plot(range(0,2*bins_nb), density_residues_sizes_pc[c_size][res], color = residues_def["colour"][res], label = str(res))
-		plt.plot(range(0,2*bins_nb), density_particles_sizes_pc[c_size]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
+			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_sizes_pc[c_size][res], color = residues_def["colour"][res], label = str(res))
+		plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
 		if water_pres:
-			plt.plot(range(0,2*bins_nb), density_particles_sizes_pc[c_size]["water"], color = particles_def["colour"]["water"], label = "water")
-		plt.vlines(np.floor(z_upper/float(args.slices_thick)) + bins_nb, 0, max_density_residues_pc, linestyles = 'dashed')
-		plt.vlines(np.floor(z_lower/float(args.slices_thick)) + bins_nb, 0, max_density_residues_pc, linestyles = 'dashed')
-		plt.vlines(bins_nb, 0, max_density_residues_pc, linestyles = 'dashdot')
+			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size]["water"], color = particles_def["colour"]["water"], label = "water")
+		plt.vlines(z_upper, 0, max_density_residues_pc, linestyles = 'dashed')
+		plt.vlines(z_lower, 0, max_density_residues_pc, linestyles = 'dashed')
+		plt.vlines(0, 0, max_density_residues_pc, linestyles = 'dashdot')
 		fontP.set_size("small")
 		ax.legend(prop=fontP)
 		plt.xlabel('z distance to bilayer center [$\AA$]')
 		plt.ylabel('relative residues frequency [$\AA^{-3}$]')
 		
 		#save figure
-		ax.set_xlim(0, 2*bins_nb)
+		ax.set_xlim(-args.max_z_dist, args.max_z_dist)
 		ax.set_ylim(0, max_density_residues_pc)
 		ax.spines['top'].set_visible(False)
 		ax.spines['right'].set_visible(False)
@@ -2633,10 +2625,6 @@ def density_graph_residues():											#DONE
 		ax.yaxis.set_ticks_position('left')
 		ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
 		ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
-		xlabel = ax.get_xticks().tolist()
-		for tick_index in range(0,len(xlabel)):
-			xlabel[tick_index] -= bins_nb
-		ax.set_xticklabels(xlabel)
 		ax.xaxis.labelpad = 20
 		ax.yaxis.labelpad = 20
 		plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
@@ -2664,20 +2652,20 @@ def density_graph_residues():											#DONE
 			#plot data
 			ax = fig.add_subplot(111)
 			for res in residues_def["labels"]:
-				plt.plot(range(0,2*bins_nb), density_residues_groups_pc[g_index][res], color = residues_def["colour"][res], label = str(res))
-			plt.plot(range(0,2*bins_nb), density_particles_groups_pc[g_index]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
+				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_groups_pc[g_index][res], color = residues_def["colour"][res], label = str(res))
+			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
 			if water_pres:
-				plt.plot(range(0,2*bins_nb), density_particles_groups_pc[g_index]["water"], color = particles_def["colour"]["water"], label = "water")
-			plt.vlines(np.floor(z_upper/float(args.slices_thick)) + bins_nb, 0, max_density_residues_pc, linestyles = 'dashed')
-			plt.vlines(np.floor(z_lower/float(args.slices_thick)) + bins_nb, 0, max_density_residues_pc, linestyles = 'dashed')
-			plt.vlines(bins_nb, 0, max_density_residues_pc, linestyles = 'dashdot')
+				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index]["water"], color = particles_def["colour"]["water"], label = "water")
+			plt.vlines(z_upper, 0, max_density_residues_pc, linestyles = 'dashed')
+			plt.vlines(z_lower, 0, max_density_residues_pc, linestyles = 'dashed')
+			plt.vlines(0, 0, max_density_residues_pc, linestyles = 'dashdot')
 			fontP.set_size("small")
 			ax.legend(prop=fontP)
 			plt.xlabel('z distance to bilayer center [$\AA$]')
 			plt.ylabel('relative residues particles frequency [$\AA^{-3}$]')
 			
 			#save figure
-			ax.set_xlim(0, 2*bins_nb)
+			ax.set_xlim(-args.max_z_dist, args.max_z_dist)
 			ax.set_ylim(0, max_density_residues_pc)
 			ax.spines['top'].set_visible(False)
 			ax.spines['right'].set_visible(False)
@@ -2685,10 +2673,6 @@ def density_graph_residues():											#DONE
 			ax.yaxis.set_ticks_position('left')
 			ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
 			ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
-			xlabel = ax.get_xticks().tolist()
-			for tick_index in range(0,len(xlabel)):
-				xlabel[tick_index] -= bins_nb
-			ax.set_xticklabels(xlabel)
 			ax.xaxis.labelpad = 20
 			ax.yaxis.labelpad = 20
 			plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
@@ -2723,20 +2707,20 @@ def density_graph_charges():											#DONE
 		ax = fig.add_subplot(111)
 		for charge_g in charges_groups.keys() + ["total"]:
 			if charge_g == "total":
-				plt.plot(range(0,2*bins_nb), density_charges_sizes[c_size][charge_g], color = charges_colours[charge_g], label = str(charge_g), linewidth = 2)
+				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_sizes[c_size][charge_g], color = charges_colours[charge_g], label = str(charge_g), linewidth = 2)
 			else:
-				plt.plot(range(0,2*bins_nb), density_charges_sizes[c_size][charge_g], color = charges_colours[charge_g], label = str(charge_g))
-		plt.vlines(np.floor(z_upper/float(args.slices_thick)) + bins_nb, min_density_charges, max_density_charges, linestyles = 'dashed')
-		plt.vlines(np.floor(z_lower/float(args.slices_thick)) + bins_nb, min_density_charges, max_density_charges, linestyles = 'dashed')
-		plt.vlines(bins_nb, min_density_charges, max_density_charges, linestyles = 'dashdot')
-		plt.hlines(0, 0, 2*bins_nb)
+				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_sizes[c_size][charge_g], color = charges_colours[charge_g], label = str(charge_g))
+		plt.vlines(z_upper, min_density_charges, max_density_charges, linestyles = 'dashed')
+		plt.vlines(z_lower, min_density_charges, max_density_charges, linestyles = 'dashed')
+		plt.vlines(0, min_density_charges, max_density_charges, linestyles = 'dashdot')
+		plt.hlines(0,-args.max_z_dist, args.max_z_dist)
 		fontP.set_size("small")
 		ax.legend(prop=fontP)
 		plt.xlabel('z distance to bilayer center [$\AA$]')
 		plt.ylabel('average charge density [$e.\AA^{-3}$]')
 		
 		#save figure
-		ax.set_xlim(0, 2*bins_nb)
+		ax.set_xlim(-args.max_z_dist, args.max_z_dist)
 		ax.set_ylim(min_density_charges, max_density_charges)
 		ax.spines['top'].set_visible(False)
 		ax.spines['right'].set_visible(False)
@@ -2744,10 +2728,6 @@ def density_graph_charges():											#DONE
 		ax.yaxis.set_ticks_position('left')
 		ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
 		ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
-		xlabel = ax.get_xticks().tolist()
-		for tick_index in range(0,len(xlabel)):
-			xlabel[tick_index] -= bins_nb
-		ax.set_xticklabels(xlabel)
 		ax.xaxis.labelpad = 20
 		ax.yaxis.labelpad = 20
 		plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
@@ -2776,20 +2756,20 @@ def density_graph_charges():											#DONE
 			ax = fig.add_subplot(111)
 			for charge_g in charges_groups.keys() + ["total"]:
 				if charge_g == "total":
-					plt.plot(range(0,2*bins_nb), density_charges_groups[g_index][charge_g], color = charges_colours[charge_g], label = str(charge_g), linewidth = 2)
+					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_groups[g_index][charge_g], color = charges_colours[charge_g], label = str(charge_g), linewidth = 2)
 				else:
-					plt.plot(range(0,2*bins_nb), density_charges_groups[g_index][charge_g], color = charges_colours[charge_g], label = str(charge_g))
-			plt.vlines(np.floor(z_upper/float(args.slices_thick)) + bins_nb, min_density_charges, max_density_charges, linestyles = 'dashed')
-			plt.vlines(np.floor(z_lower/float(args.slices_thick)) + bins_nb, min_density_charges, max_density_charges, linestyles = 'dashed')
-			plt.vlines(bins_nb, min_density_charges, max_density_charges, linestyles = 'dashdot')
-			plt.hlines(0, 0, 2*bins_nb)
+					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_groups[g_index][charge_g], color = charges_colours[charge_g], label = str(charge_g))
+			plt.vlines(z_upper, min_density_charges, max_density_charges, linestyles = 'dashed')
+			plt.vlines(z_lower, max_density_charges, linestyles = 'dashed')
+			plt.vlines(0, min_density_charges, max_density_charges, linestyles = 'dashdot')
+			plt.hlines(0, -args.max_z_dist, args.max_z_dist)
 			fontP.set_size("small")
 			ax.legend(prop=fontP)
 			plt.xlabel('z distance to bilayer center [$\AA$]')
 			plt.ylabel('average charge density [$e.\AA^{-3}$]')
 			
 			#save figure
-			ax.set_xlim(0, 2*bins_nb)
+			ax.set_xlim(-args.max_z_dist, args.max_z_dist)
 			ax.set_ylim(min_density_charges, max_density_charges)
 			ax.spines['top'].set_visible(False)
 			ax.spines['right'].set_visible(False)
@@ -2797,10 +2777,6 @@ def density_graph_charges():											#DONE
 			ax.yaxis.set_ticks_position('left')
 			ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
 			ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
-			xlabel = ax.get_xticks().tolist()
-			for tick_index in range(0,len(xlabel)):
-				xlabel[tick_index] -= bins_nb
-			ax.set_xticklabels(xlabel)
 			ax.xaxis.labelpad = 20
 			ax.yaxis.labelpad = 20
 			plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
