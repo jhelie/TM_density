@@ -1325,7 +1325,7 @@ def initialise_groups():												#DONE
 # data structures
 #=========================================================================================
 
-def struct_time():													#DONE
+def struct_time():														#DONE
 
 	global frames_nb
 	global frames_time
@@ -1334,13 +1334,14 @@ def struct_time():													#DONE
 
 	return
 def struct_particles():
-	global z_upper
-	global z_lower
+	global z_upper, z_lower
+	global z_boundaries_nb_data
 	global sizes_sampled
 	global sizes_coverage
 	global sizes_nb_clusters
 	z_upper = 0
 	z_lower = 0
+	z_boundaries_nb_data = 0
 	sizes_sampled = []
 	sizes_coverage = {}
 	sizes_nb_clusters = {"all sizes": 0}
@@ -1404,19 +1405,6 @@ def struct_charges():
 # core functions
 #=========================================================================================
 
-def get_z_coords():														#DONE
-	
-	global z_upper
-	global z_lower	
-	global z_middle_instant
-
-	tmp_zu = leaflet_sele["upper"].centerOfGeometry()[2]
-	tmp_zl = leaflet_sele["lower"].centerOfGeometry()[2]
-	z_middle_instant = tmp_zl + (tmp_zu - tmp_zl)/float(2)
-	z_upper += tmp_zu - z_middle_instant
-	z_lower += tmp_zl - z_middle_instant
-		
-	return
 def get_distances(box_dim):												#DONE
 		
 	#method: use minimum distance between proteins
@@ -1479,16 +1467,26 @@ def calculate_cog(tmp_coords, box_dim):									#DONE
 		cog_coord[n] = tet_avg * box_dim[n] / float(2*math.pi)
 	
 	return cog_coord
-def calculate_density(box_dim, f_nb):											#DONE
+def calculate_density(box_dim, f_nb):									#DONE
 	
 	global sizes_sampled
 	global groups_sampled
+	global z_upper, z_lower
+	global z_boundaries_nb_data
 	loc_z_axis = np.array([0,0,1])
 	loc_z_axis = loc_z_axis.reshape((3,1))
 	
 	#retrieve coordinates arrays (pre-processing saves time as MDAnalysis functions are quite slow and we need to make such calls a few times)
 	tmp_lip_coords = {l: leaflet_sele[l].coordinates() for l in ["lower","upper"]}
-	get_z_coords()
+	
+	#calculate middle of bilayer and relative coordinate of upper and lower leaflets assuming the z is the normal to the bilayer
+	if args.normal != 'z':
+		tmp_zu = leaflet_sele["upper"].centerOfGeometry()[2]
+		tmp_zl = leaflet_sele["lower"].centerOfGeometry()[2]
+		tmp_z_mid = tmp_zl + (tmp_zu - tmp_zl)/float(2)
+		z_upper += tmp_zu - tmp_z_mid
+		z_lower += tmp_zl - tmp_z_mid
+		z_boundaries_nb_data +=1
 	
 	#case: no proteins
 	#=================
@@ -1510,7 +1508,7 @@ def calculate_density(box_dim, f_nb):											#DONE
 														
 					#center z coordinates on the bilayer center z coordinate
 					tmp_coord = tmp_part_sele.coordinates()
-					tmp_coord[:,2] -= z_middle_instant
+					tmp_coord[:,2] -= tmp_z_mid
 				
 					#deal with pbc and center axis on 0
 					tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
@@ -1546,7 +1544,7 @@ def calculate_density(box_dim, f_nb):											#DONE
 					
 						#center z coordinates on the bilayer center z coordinate
 						tmp_coord = tmp_q_sele.coordinates()
-						tmp_coord[:,2] -= z_middle_instant
+						tmp_coord[:,2] -= tmp_z_mid
 
 						#deal with pbc and center axis on 0
 						tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
@@ -1700,8 +1698,13 @@ def calculate_density(box_dim, f_nb):											#DONE
 					cog_lw_rotated = calculate_cog(tmp_lip_coords_lw_within_rotated, box_dim)
 					norm_z_middle = cog_lw_rotated[2] + (cog_up_rotated[2] - cog_lw_rotated[2])/float(2)
 					
+					#store relative coordinate of local upper and lower leaflets (once they've been rotated in the x,y plane)
+					z_upper += cog_up_rotated[2] - norm_z_middle
+					z_lower += cog_lw_rotated[2] - norm_z_middle
+					z_boundaries_nb_data += 1
+					
 				else:
-					norm_z_middle = z_middle_instant
+					norm_z_middle = tmp_z_mid
 									
 				#density profile: particles
 				#--------------------------
@@ -1880,8 +1883,7 @@ def calculate_density(box_dim, f_nb):											#DONE
 	return
 def calculate_stats():													#DONE
 	
-	global z_upper
-	global z_lower
+	global z_upper, z_lower
 	global max_density_particles_pc
 	max_density_particles_pc  = float("-inf")
 	if args.residuesfilename != "no":
@@ -1895,8 +1897,8 @@ def calculate_stats():													#DONE
 	
 	#coords
 	#======
-	z_upper /= float(nb_frames_to_process)
-	z_lower /= float(nb_frames_to_process)
+	z_upper /= float(z_boundaries_nb_data)
+	z_lower /= float(z_boundaries_nb_data)
 	
 	#sizes
 	#=====
@@ -2031,7 +2033,7 @@ def calculate_stats():													#DONE
 	return
 
 #=========================================================================================
-# outputs: TO DO
+# outputs
 #=========================================================================================
 
 def density_write_particles():											#DONE
