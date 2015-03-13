@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.0.0"
+version_nb = "0.0.1"
 parser = argparse.ArgumentParser(prog = 'cluster_density_profile_v2', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 *********************************************************
@@ -1260,7 +1260,7 @@ def initialise_groups():												#DONE
 			line = line[:-1]
 		l_content = line.split(',')
 		#check format
-		if len(l_content) != 2:
+		if len(l_content) < 2:
 			print "Error: the format of line " + str(g_index+1) + " should be 'min,max' (see cluster_density_profile --help, note 4)."
 			print "->", line
 			sys.exit(1)
@@ -1325,6 +1325,14 @@ def initialise_groups():												#DONE
 # data structures
 #=========================================================================================
 
+def struct_time():													#DONE
+
+	global frames_nb
+	global frames_time
+	frames_nb = np.zeros(nb_frames_to_process)
+	frames_time = np.zeros(nb_frames_to_process)
+
+	return
 def struct_particles():
 	global z_upper
 	global z_lower
@@ -1471,7 +1479,7 @@ def calculate_cog(tmp_coords, box_dim):									#DONE
 		cog_coord[n] = tet_avg * box_dim[n] / float(2*math.pi)
 	
 	return cog_coord
-def calculate_density(box_dim):											#DONE
+def calculate_density(box_dim, f_nb):											#DONE
 	
 	global sizes_sampled
 	global groups_sampled
@@ -1487,6 +1495,11 @@ def calculate_density(box_dim):											#DONE
 	if not protein_pres:
 
 		sizes_nb_clusters["all sizes"] += 1
+
+		#display update
+		progress = '\r -processing frame ' + str(f_nb+1) + '/' + str(nb_frames_to_process) + ' (every ' + str(args.frames_dt) + ' from ' + str(f_start) + ' to ' + str(f_end) + ' out of ' + str(nb_frames_xtc) + ')             '
+		sys.stdout.flush()
+		sys.stdout.write(progress)
 		
 		#density profile: particles
 		#--------------------------
@@ -1570,7 +1583,15 @@ def calculate_density(box_dim):											#DONE
 	
 		#process them
 		#------------
+		nb_clusters = len(clusters)
+		c_counter = 0
 		for cluster in clusters:		
+			#display update
+			c_counter += 1
+			progress = '\r -processing frame ' + str(f_nb+1) + '/' + str(nb_frames_to_process) + ' (every ' + str(args.frames_dt) + ' from ' + str(f_start) + ' to ' + str(f_end) + ' out of ' + str(nb_frames_xtc) + ') and cluster ' + str(c_counter) + '/' + str(nb_clusters) + '              '
+			sys.stdout.flush()
+			sys.stdout.write(progress)
+
 			#create selection for current cluster and only process it if it's TM (find closest PO4 particles for each particles of clusters, if all are in the same leaflet then it's surfacic [NB: this is done at the CLUSTER level (the same criteria at the protein level would probably fail)])
 			c_sele = MDAnalysis.core.AtomGroup.AtomGroup([])
 			for p_index in cluster:
@@ -2815,6 +2836,7 @@ if args.cluster_groups_file != "no":
 	initialise_groups()
 
 #create data structures
+struct_time()
 struct_particles()
 if args.residuesfilename != "no":
 	struct_residues()
@@ -2829,17 +2851,21 @@ print "\nCalculating density profiles..."
 #case: structure only
 #--------------------
 if args.xtcfilename=="no":
-	calculate_density(U.trajectory.ts.dimensions)
+	calculate_density(U.trajectory.ts.dimensions, 1)
 
 #case: browse xtc frames
 #-----------------------
 else:
 	for f_index in range(0,nb_frames_to_process):
+		#frame properties
 		ts = U.trajectory[frames_to_process[f_index]]
-		progress = '\r -processing frame ' + str(f_index+1) + '/' + str(nb_frames_to_process) + ' (every ' + str(args.frames_dt) + ' frame(s) from frame ' + str(f_start) + ' to frame ' + str(f_end) + ' out of ' + str(nb_frames_xtc) + ')      '  
-		sys.stdout.flush()
-		sys.stdout.write(progress)							
-		calculate_density(U.trajectory.ts.dimensions)
+		f_time = ts.time/float(1000)
+		f_nb = ts.frame
+		frames_nb[f_index] = f_nb
+		frames_time[f_index] = f_time
+
+		#calculate densities
+		calculate_density(U.trajectory.ts.dimensions, f_index)
 	print ""
 
 #=========================================================================================
