@@ -1480,8 +1480,8 @@ def calculate_density(box_dim, f_nb):									#DONE
 	tmp_lip_coords = {l: leaflet_sele[l].coordinates() for l in ["lower","upper"]}
 	
 	#calculate middle of bilayer and relative coordinate of upper and lower leaflets assuming the z is the normal to the bilayer
-	tmp_zu = leaflet_sele["upper"].centerOfGeometry()[2]
-	tmp_zl = leaflet_sele["lower"].centerOfGeometry()[2]
+	tmp_zu = np.average(tmp_lip_coords["upper"], axis = 0)[2]
+	tmp_zl = np.average(tmp_lip_coords["lower"], axis = 0)[2]
 	tmp_z_mid = tmp_zl + (tmp_zu - tmp_zl)/float(2)
 	if args.normal == 'z':
 		z_upper += tmp_zu - tmp_z_mid
