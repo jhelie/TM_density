@@ -242,13 +242,13 @@ Option	      Default  	Description
 -b			: beginning time (ns) (the bilayer must exist by then!)
 -e			: ending time (ns)	
 -t 		10	: process every t-frames
+--particles		: definition of particles, see 'DESCRIPTION'
+--types			: definition of residue groups, see 'DESCRIPTION'
+--charges		: definition of charged particles, see 'DESCRIPTION' 
  
 Density profile options
 -----------------------------------------------------
 --range		40 	: distance spanned on either side of the bilayer center
---particles		: definition of particles, see 'DESCRIPTION'
---types			: definition of residue groups, see 'DESCRIPTION'
---charges		: definition of charged particles, see 'DESCRIPTION' 
 --slices_thick	0.5 	: z thickness of the slices (Angstrom)
 --slices_radius	30 	: radius of the slices (Angstrom)
 --normal	z	: local normal to bilayer ('z', 'cog' or 'svd'), see note 5
@@ -596,7 +596,9 @@ def set_lipids_beads():													#DONE
 def set_particles():													#DONE
 
 	global particles_def
+	global particles_def_pres
 	global particles_groups
+	
 	particles_def = {k: {} for k in ["group","colour","sele","sele_string"]}
 	colours_map = 'custom'
 	colours_map_possible = ['Spectral', 'summer', 'coolwarm', 'pink_r', 'Set1', 'Set2', 'Set3', 'brg_r', 'Dark2', 'hot', 'PuOr_r', 'afmhot_r', 'terrain_r', 'PuBuGn_r', 'RdPu', 'gist_ncar_r', 'gist_yarg_r', 'Dark2_r', 'YlGnBu', 'RdYlBu', 'hot_r', 'gist_rainbow_r', 'gist_stern', 'gnuplot_r', 'cool_r', 'cool', 'gray', 'copper_r', 'Greens_r', 'GnBu', 'gist_ncar', 'spring_r', 'gist_rainbow', 'RdYlBu_r', 'gist_heat_r', 'OrRd_r', 'CMRmap', 'bone', 'gist_stern_r', 'RdYlGn', 'Pastel2_r', 'spring', 'terrain', 'YlOrRd_r', 'Set2_r', 'winter_r', 'PuBu', 'RdGy_r', 'spectral', 'flag_r', 'jet_r', 'RdPu_r', 'Purples_r', 'gist_yarg', 'BuGn', 'Paired_r', 'hsv_r', 'bwr', 'cubehelix', 'YlOrRd', 'Greens', 'PRGn', 'gist_heat', 'spectral_r', 'Paired', 'hsv', 'Oranges_r', 'prism_r', 'Pastel2', 'Pastel1_r', 'Pastel1', 'gray_r', 'PuRd_r', 'Spectral_r', 'gnuplot2_r', 'BuPu', 'YlGnBu_r', 'copper', 'gist_earth_r', 'Set3_r', 'OrRd', 'PuBu_r', 'ocean_r', 'brg', 'gnuplot2', 'jet', 'bone_r', 'gist_earth', 'Oranges', 'RdYlGn_r', 'PiYG', 'CMRmap_r', 'YlGn', 'binary_r', 'gist_gray_r', 'Accent', 'BuPu_r', 'gist_gray', 'flag', 'seismic_r', 'RdBu_r', 'BrBG', 'Reds', 'BuGn_r', 'summer_r', 'GnBu_r', 'BrBG_r', 'Reds_r', 'RdGy', 'PuRd', 'Accent_r', 'Blues', 'Greys', 'autumn', 'cubehelix_r', 'nipy_spectral_r', 'PRGn_r', 'Greys_r', 'pink', 'binary', 'winter', 'gnuplot', 'RdBu', 'prism', 'YlOrBr', 'coolwarm_r', 'rainbow_r', 'rainbow', 'PiYG_r', 'YlGn_r', 'Blues_r', 'YlOrBr_r', 'seismic', 'Purples', 'bwr_r', 'autumn_r', 'ocean', 'Set1_r', 'PuOr', 'PuBuGn', 'nipy_spectral', 'afmhot']
@@ -680,6 +682,10 @@ def set_particles():													#DONE
 			for part_index in range(0, part_nb):
 				particles_def["colour"][particles_def["labels"][part_index]] = part_colours_value[part_index]
 
+	#initialise presence of particles
+	#--------------------------------
+	particles_def_pres = {False for part in particles_def["labels"]}
+
 	#check whether a protein or peptide group has been defined to calculate residues details
 	#---------------------------------------------------------------------------------------
 	if args.residuesfilename != "no" and "peptide" not in particles_def["labels"]:
@@ -694,6 +700,7 @@ def set_particles():													#DONE
 def set_residues():														#DONE
 
 	global residues_def
+	global residues_def_pres
 	residues_def = {k: {} for k in ["colour","sele","res_list","sele_string"]}	
 	colours_map = 'custom'
 	colours_map_possible = ['Spectral', 'summer', 'coolwarm', 'pink_r', 'Set1', 'Set2', 'Set3', 'brg_r', 'Dark2', 'hot', 'PuOr_r', 'afmhot_r', 'terrain_r', 'PuBuGn_r', 'RdPu', 'gist_ncar_r', 'gist_yarg_r', 'Dark2_r', 'YlGnBu', 'RdYlBu', 'hot_r', 'gist_rainbow_r', 'gist_stern', 'gnuplot_r', 'cool_r', 'cool', 'gray', 'copper_r', 'Greens_r', 'GnBu', 'gist_ncar', 'spring_r', 'gist_rainbow', 'RdYlBu_r', 'gist_heat_r', 'OrRd_r', 'CMRmap', 'bone', 'gist_stern_r', 'RdYlGn', 'Pastel2_r', 'spring', 'terrain', 'YlOrRd_r', 'Set2_r', 'winter_r', 'PuBu', 'RdGy_r', 'spectral', 'flag_r', 'jet_r', 'RdPu_r', 'Purples_r', 'gist_yarg', 'BuGn', 'Paired_r', 'hsv_r', 'bwr', 'cubehelix', 'YlOrRd', 'Greens', 'PRGn', 'gist_heat', 'spectral_r', 'Paired', 'hsv', 'Oranges_r', 'prism_r', 'Pastel2', 'Pastel1_r', 'Pastel1', 'gray_r', 'PuRd_r', 'Spectral_r', 'gnuplot2_r', 'BuPu', 'YlGnBu_r', 'copper', 'gist_earth_r', 'Set3_r', 'OrRd', 'PuBu_r', 'ocean_r', 'brg', 'gnuplot2', 'jet', 'bone_r', 'gist_earth', 'Oranges', 'RdYlGn_r', 'PiYG', 'CMRmap_r', 'YlGn', 'binary_r', 'gist_gray_r', 'Accent', 'BuPu_r', 'gist_gray', 'flag', 'seismic_r', 'RdBu_r', 'BrBG', 'Reds', 'BuGn_r', 'summer_r', 'GnBu_r', 'BrBG_r', 'Reds_r', 'RdGy', 'PuRd', 'Accent_r', 'Blues', 'Greys', 'autumn', 'cubehelix_r', 'nipy_spectral_r', 'PRGn_r', 'Greys_r', 'pink', 'binary', 'winter', 'gnuplot', 'RdBu', 'prism', 'YlOrBr', 'coolwarm_r', 'rainbow_r', 'rainbow', 'PiYG_r', 'YlGn_r', 'Blues_r', 'YlOrBr_r', 'seismic', 'Purples', 'bwr_r', 'autumn_r', 'ocean', 'Set1_r', 'PuOr', 'PuBuGn', 'nipy_spectral', 'afmhot']
@@ -762,11 +769,16 @@ def set_residues():														#DONE
 		for r in residues_def["res_list"][res][1:]:
 			residues_def["sele_string"][res] += " or resname " + str(r)
 
+	#initialise presence of particles
+	#--------------------------------
+	residues_def_pres = {False for part in residues_def["labels"]}
+
 	return
 def set_charges():														#DONE
 	
 	global charges_groups
 	global charges_colours
+	global charges_groups_pres
 	charges_groups = {}
 	charges_colours = {}
 	charges_colours["total"] = '#262626'								#very dark grey
@@ -792,12 +804,14 @@ def set_charges():														#DONE
 		#lipids
 		charges_colours["lipids"] = "#b2182b"							#dark red
 		charges_groups["lipids"] = {}
-		charges_groups["lipids"]["names"] = ["POPS"]
+		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]
 		charges_groups["lipids"]["values"] = {}
-		charges_groups["lipids"]["values"]["POPS"] = -1
+		charges_groups["lipids"]["values"]["PO4"] = -1
+		charges_groups["lipids"]["values"]["NH3-NC3"] = 1
 		charges_groups["lipids"]["sele"] = {}
 		charges_groups["lipids"]["sele_string"] = {}
-		charges_groups["lipids"]["sele_string"]["POPS"] = "resname POPS and name PO4"
+		charges_groups["lipids"]["sele_string"]["PO4"] = "name PO4"
+		charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
 		
 		#transportan
 		charges_colours["peptide"] = "#053061"							#dark blue
@@ -851,6 +865,10 @@ def set_charges():														#DONE
 			charges_colours_value = tmp_cmap(np.linspace(0, 1, charges_groups_nb))
 			for q_index in range(0, charges_groups_nb):
 				charges_colours[charges_groups_keys[q_index]] = charges_colours_value[q_index]
+
+	#initialise presence of charges groups
+	#-------------------------------------
+	charges_groups_pres = {False for charge_g in charges_groups.keys()}
 
 	return
 def load_MDA_universe():												#DONE
@@ -924,7 +942,7 @@ def load_MDA_universe():												#DONE
 	#create selection: particles density
 	#-----------------------------------
 	water_pres = False
-	particles_pres = False
+	particles_pres_any = False
 	
 	#check for presence of each particle
 	for part in particles_def["labels"]:
@@ -932,10 +950,11 @@ def load_MDA_universe():												#DONE
 		if particles_def["sele"][part].numberOfAtoms() == 0:
 			print " ->warning: particle selection string '" + str(particles_def["sele_string"][part]) + "' returned 0 atoms."
 		else:
-			particles_pres = True
+			particles_pres_any = True
+			particles_def_pres[part] = True
 			if part == "water":
 				water_pres = True
-	if not particles_pres:
+	if not particles_pres_any:
 		print "Error: none of the specified particles was found in the system, check your --particles option."
 		sys.exit(1)
 				
@@ -952,21 +971,22 @@ def load_MDA_universe():												#DONE
 		
 	#create selection: residues density
 	#----------------------------------
-	residues_pres = False
+	residues_pres_any = False
 	if args.residuesfilename != "no":
 		for res in residues_def["labels"]:
 			residues_def["sele"][res] = U.selectAtoms(residues_def["sele_string"][res])
 			if residues_def["sele"][res].numberOfAtoms() == 0:
 				print " ->warning: residues selection string '" + str(residues_def["sele_string"][res]) + "' returned 0 atoms."
 			else:
-				residues_pres = True		
-		if not residues_pres:
+				residues_pres_any = True
+				residues_def_pres[res] = True
+		if not residues_pres_any:
 			print "Error: none of the specified residues was found in the system, check your --residues option."
 			sys.exit(1)
 	
 	#create charged particles selections
 	#-----------------------------------
-	charge_pres = False
+	charge_pres_any = False
 	if args.chargesfilename != "no":
 		for charge_g in charges_groups.keys():
 			for q in charges_groups[charge_g]["names"]:
@@ -974,8 +994,9 @@ def load_MDA_universe():												#DONE
 			if charges_groups[charge_g]["sele"][q].numberOfAtoms() == 0:
 				print " ->warning: charge selection string '" + str(charges_groups[charge_g]["sele_string"][q]) + "' returned 0 atoms."
 			else:
-				charge_pres = True
-		if not charge_pres:
+				charge_pres_any = True
+				charges_groups_pres[charge_g] = True
+		if not charge_pres_any:
 			print "Error: no charged particles found, use '--charges no' or supply correct charges definition."
 			sys.exit(1)
 
@@ -1711,12 +1732,13 @@ def calculate_density(box_dim, f_nb):									#DONE
 				#density profile: particles
 				#--------------------------
 				for part in particles_def["labels"]:
-					if part == "peptide":
-						tmp_part_sele = c_sele
-					else:
-						tmp_part_sele = particles_def["sele"][part]
-					if tmp_part_sele.numberOfAtoms() > 0:
-						
+					if particles_def_pres[part]:
+						#select particles
+						if part == "peptide":
+							tmp_part_sele = c_sele
+						else:
+							tmp_part_sele = particles_def["sele"][part]
+							
 						#retrieve original coordinates
 						tmp_coord = tmp_part_sele.coordinates()
 						
@@ -1769,10 +1791,10 @@ def calculate_density(box_dim, f_nb):									#DONE
 				#-------------------------
 				if args.residuesfilename != "no":
 					for res in residues_def["labels"]:
-						#select particles of given residues
-						tmp_res_sele = c_sele.selectAtoms(residues_def["sele_string"][res])
-						if tmp_res_sele.numberOfAtoms() > 0:
-							
+						if residues_def_pres[res]:
+							#select particles of given residues
+							tmp_res_sele = c_sele.selectAtoms(residues_def["sele_string"][res])
+								
 							#retrieve original coordinates
 							tmp_coord = tmp_res_sele.coordinates()
 							
@@ -1823,61 +1845,62 @@ def calculate_density(box_dim, f_nb):									#DONE
 				#------------------------
 				if args.chargesfilename != "no":
 					for charge_g in charges_groups.keys():
-						tmp_bins_nb = np.zeros(2*bins_nb)
-						for q in charges_groups[charge_g]["names"]:
-							if charge_g == "peptide":
-								tmp_q_sele = c_sele.selectAtoms(charges_groups[charge_g]["sele_string"][q])
-							else:
-								tmp_q_sele = charges_groups[charge_g]["sele"][q]
-							if tmp_q_sele.numberOfAtoms() > 0:
-													
-								#retrieve original coordinates
-								tmp_coord = tmp_q_sele.coordinates()
+						if charges_groups_pres[charge_g]:
+							tmp_bins_nb = np.zeros(2*bins_nb)
+							for q in charges_groups[charge_g]["names"]:
+								if charge_g == "peptide":
+									tmp_q_sele = c_sele.selectAtoms(charges_groups[charge_g]["sele_string"][q])
+								else:
+									tmp_q_sele = charges_groups[charge_g]["sele"][q]
+								if tmp_q_sele.numberOfAtoms() > 0:
+														
+									#retrieve original coordinates
+									tmp_coord = tmp_q_sele.coordinates()
+									
+									#rotate coordinates so that the local normal of the bilayer is // to the z axis
+									if args.normal != 'z':
+										tmp_coord = np.dot(norm_rot, tmp_coord.T).T
+	
+									#center cluster coordinates on the (x,y) coordinates of its cog
+									tmp_coord[:,0] -= cluster_cog[0]
+									tmp_coord[:,1] -= cluster_cog[1]
 								
-								#rotate coordinates so that the local normal of the bilayer is // to the z axis
-								if args.normal != 'z':
-									tmp_coord = np.dot(norm_rot, tmp_coord.T).T
-
-								#center cluster coordinates on the (x,y) coordinates of its cog
-								tmp_coord[:,0] -= cluster_cog[0]
-								tmp_coord[:,1] -= cluster_cog[1]
-							
-								#center cluster z coordinates on the bilayer center z coordinate
-								tmp_coord[:,2] -= norm_z_middle
-		
-								#deal with pbc and center axis on 0
-								tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
-								tmp_coord[:,1] -= (np.floor(2*tmp_coord[:,1]/float(box_dim[1])) + (1-np.sign(tmp_coord[:,1]))/float(2)) * box_dim[1]
-								tmp_coord[:,2] -= (np.floor(2*tmp_coord[:,2]/float(box_dim[2])) + (1-np.sign(tmp_coord[:,2]))/float(2)) * box_dim[2]
-								
-								#keep those within the specified radius
-								tmp_coord_within = tmp_coord[tmp_coord[:,0]**2 + tmp_coord[:,1]**2 < args.slices_radius**2]
-					
-								#update particle coverage (Chang algorithm for on the fly average and std dev - actually Knuth simple version as we add element one by one)
-								tmp_pc_coord = np.shape(tmp_coord_within)[0]/float(np.shape(tmp_coord)[0])*100
-								for c in [c_size, "all sizes"]:
-									delta =  tmp_pc_coord - sizes_coverage["charges"]["avg"][c][charge_g]
-									sizes_coverage["charges"]["nb"][c][charge_g] += 1
-									sizes_coverage["charges"]["avg"][c][charge_g] += delta / sizes_coverage["charges"]["nb"][c][charge_g]
-									sizes_coverage["charges"]["std"][c][charge_g] += delta * (tmp_pc_coord - sizes_coverage["charges"]["avg"][c][charge_g])
-								if args.cluster_groups_file != "no":
-									delta =  tmp_pc_coord - groups_coverage["charges"]["avg"][g_index][charge_g]
-									groups_coverage["charges"]["nb"][g_index][charge_g] += 1
-									groups_coverage["charges"]["avg"][g_index][charge_g] += delta / groups_coverage["charges"]["nb"][g_index][charge_g]
-									groups_coverage["charges"]["std"][g_index][charge_g] += delta * (tmp_pc_coord - groups_coverage["charges"]["avg"][g_index][charge_g])
-		
-								#add number of particles within each slice
-								bin_rel = np.floor(tmp_coord_within[:,2]/float(args.slices_thick)).astype(int)
-								bin_abs = bin_rel[abs(bin_rel) < bins_nb_max] + int(bins_nb)
-								if len(bin_abs) > 0:
-									tmp_bins_nb += np.histogram(bin_abs, np.arange(2*bins_nb + 1))[0] * charges_groups[charge_g]["values"][q]
-						density_charges_sizes[c_size][charge_g] += tmp_bins_nb 
-						density_charges_sizes[c_size]["total"] += tmp_bins_nb
-						density_charges_sizes["all sizes"][charge_g] += tmp_bins_nb
-						density_charges_sizes["all sizes"]["total"] += tmp_bins_nb
-						if args.cluster_groups_file != "no":
-							density_charges_groups[g_index][charge_g] += tmp_bins_nb
-							density_charges_groups[g_index]["total"] += tmp_bins_nb
+									#center cluster z coordinates on the bilayer center z coordinate
+									tmp_coord[:,2] -= norm_z_middle
+			
+									#deal with pbc and center axis on 0
+									tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
+									tmp_coord[:,1] -= (np.floor(2*tmp_coord[:,1]/float(box_dim[1])) + (1-np.sign(tmp_coord[:,1]))/float(2)) * box_dim[1]
+									tmp_coord[:,2] -= (np.floor(2*tmp_coord[:,2]/float(box_dim[2])) + (1-np.sign(tmp_coord[:,2]))/float(2)) * box_dim[2]
+									
+									#keep those within the specified radius
+									tmp_coord_within = tmp_coord[tmp_coord[:,0]**2 + tmp_coord[:,1]**2 < args.slices_radius**2]
+						
+									#update particle coverage (Chang algorithm for on the fly average and std dev - actually Knuth simple version as we add element one by one)
+									tmp_pc_coord = np.shape(tmp_coord_within)[0]/float(np.shape(tmp_coord)[0])*100
+									for c in [c_size, "all sizes"]:
+										delta =  tmp_pc_coord - sizes_coverage["charges"]["avg"][c][charge_g]
+										sizes_coverage["charges"]["nb"][c][charge_g] += 1
+										sizes_coverage["charges"]["avg"][c][charge_g] += delta / sizes_coverage["charges"]["nb"][c][charge_g]
+										sizes_coverage["charges"]["std"][c][charge_g] += delta * (tmp_pc_coord - sizes_coverage["charges"]["avg"][c][charge_g])
+									if args.cluster_groups_file != "no":
+										delta =  tmp_pc_coord - groups_coverage["charges"]["avg"][g_index][charge_g]
+										groups_coverage["charges"]["nb"][g_index][charge_g] += 1
+										groups_coverage["charges"]["avg"][g_index][charge_g] += delta / groups_coverage["charges"]["nb"][g_index][charge_g]
+										groups_coverage["charges"]["std"][g_index][charge_g] += delta * (tmp_pc_coord - groups_coverage["charges"]["avg"][g_index][charge_g])
+			
+									#add number of particles within each slice
+									bin_rel = np.floor(tmp_coord_within[:,2]/float(args.slices_thick)).astype(int)
+									bin_abs = bin_rel[abs(bin_rel) < bins_nb_max] + int(bins_nb)
+									if len(bin_abs) > 0:
+										tmp_bins_nb += np.histogram(bin_abs, np.arange(2*bins_nb + 1))[0] * charges_groups[charge_g]["values"][q]
+							density_charges_sizes[c_size][charge_g] += tmp_bins_nb 
+							density_charges_sizes[c_size]["total"] += tmp_bins_nb
+							density_charges_sizes["all sizes"][charge_g] += tmp_bins_nb
+							density_charges_sizes["all sizes"]["total"] += tmp_bins_nb
+							if args.cluster_groups_file != "no":
+								density_charges_groups[g_index][charge_g] += tmp_bins_nb
+								density_charges_groups[g_index]["total"] += tmp_bins_nb
 	
 	return
 def calculate_stats():													#DONE
@@ -1913,56 +1936,66 @@ def calculate_stats():													#DONE
 		#density profile: particles
 		#--------------------------
 		for part in particles_def["labels"]:
-			#% of particles covered
-			sizes_coverage["particles"]["avg"][c_size][part] = round(sizes_coverage["particles"]["avg"][c_size][part],1)
-			if sizes_coverage["particles"]["nb"][c_size][part] > 1:
-				sizes_coverage["particles"]["std"][c_size][part] = round(math.sqrt(sizes_coverage["particles"]["std"][c_size][part] / float(sizes_coverage["particles"]["nb"][c_size][part])),1)
-			else:
-				sizes_coverage["particles"]["std"][c_size][part] = "nan"
-		
-			#relative density
-			if tmp_normalisation[particles_def["group"][part]] > 0:
-				density_particles_sizes_pc[c_size][part] = density_particles_sizes_nb[c_size][part] / float(tmp_normalisation[particles_def["group"][part]])
+			if particles_def_pres[part]:
+				#% of particles covered
+				sizes_coverage["particles"]["avg"][c_size][part] = round(sizes_coverage["particles"]["avg"][c_size][part],1)
+				if sizes_coverage["particles"]["nb"][c_size][part] > 1:
+					sizes_coverage["particles"]["std"][c_size][part] = round(math.sqrt(sizes_coverage["particles"]["std"][c_size][part] / float(sizes_coverage["particles"]["nb"][c_size][part])),1)
+				else:
+					sizes_coverage["particles"]["std"][c_size][part] = "nan"
 			
-			#update scale
-			if part != "Na+" and part != "Cl-":
-				max_density_particles_pc = max(max_density_particles_pc, max(density_particles_sizes_pc[c_size][part]))
-				if (part == "peptide" or part == "water") and args.residuesfilename != "no":
-					max_density_residues_pc = max(max_density_residues_pc, max(density_particles_sizes_pc[c_size][part]))
+				#relative density
+				if tmp_normalisation[particles_def["group"][part]] > 0:
+					density_particles_sizes_pc[c_size][part] = density_particles_sizes_nb[c_size][part] / float(tmp_normalisation[particles_def["group"][part]])
+				
+				#update scale
+				if part != "Na+" and part != "Cl-":
+					max_density_particles_pc = max(max_density_particles_pc, max(density_particles_sizes_pc[c_size][part]))
+					if (part == "peptide" or part == "water") and args.residuesfilename != "no":
+						max_density_residues_pc = max(max_density_residues_pc, max(density_particles_sizes_pc[c_size][part]))
 		
 		#density profile: residues
 		#-------------------------
 		if args.residuesfilename != "no":
 			for res in residues_def["labels"]:
-				#% of particles covered
-				sizes_coverage["residues"]["avg"][c_size][res] = round(sizes_coverage["residues"]["avg"][c_size][res],1)
-				if sizes_coverage["residues"]["nb"][c_size][res] > 1:
-					sizes_coverage["residues"]["std"][c_size][res] = round(math.sqrt(sizes_coverage["residues"]["std"][c_size][res] / float(sizes_coverage["residues"]["nb"][c_size][res])),1)
-				else:
-					sizes_coverage["residues"]["std"][c_size][res] = "nan"
-				
-				#relative density
-				density_residues_sizes_pc[c_size][res] = density_residues_sizes_nb[c_size][res] / float(tmp_normalisation["peptide"])
+				if residues_def_pres[res]:
+					#% of particles covered
+					sizes_coverage["residues"]["avg"][c_size][res] = round(sizes_coverage["residues"]["avg"][c_size][res],1)
+					if sizes_coverage["residues"]["nb"][c_size][res] > 1:
+						sizes_coverage["residues"]["std"][c_size][res] = round(math.sqrt(sizes_coverage["residues"]["std"][c_size][res] / float(sizes_coverage["residues"]["nb"][c_size][res])),1)
+					else:
+						sizes_coverage["residues"]["std"][c_size][res] = "nan"
+					
+					#relative density
+					density_residues_sizes_pc[c_size][res] = density_residues_sizes_nb[c_size][res] / float(tmp_normalisation["peptide"])
 
 		#density profile: charges
 		#------------------------
 		if args.chargesfilename != "no":
 			tmp_normalisation = sizes_nb_clusters[c_size] * slice_volume
-			for charge_g in charges_groups.keys() + ["total"]:
-				#% of particles covered
-				if charge_g != "total":
+			for charge_g in charges_groups.keys():
+				if charges_groups_pres[charge_g]:
+					#% of particles covered
 					sizes_coverage["charges"]["avg"][c_size][charge_g] = round(sizes_coverage["charges"]["avg"][c_size][charge_g],1)
 					if sizes_coverage["charges"]["nb"][c_size][charge_g] > 1:
 						sizes_coverage["charges"]["std"][c_size][charge_g] = round(math.sqrt(sizes_coverage["charges"]["std"][c_size][charge_g] / float(sizes_coverage["charges"]["nb"][c_size][charge_g])),1)
 					else:
 						sizes_coverage["charges"]["std"][c_size][charge_g] = "nan"
-				
-				#absolute density
-				density_charges_sizes[c_size][charge_g] /= float(tmp_normalisation)
-				
-				#update scale
-				max_density_charges = max(max_density_charges, max(density_charges_sizes[c_size][charge_g]))
-				min_density_charges = min(min_density_charges, min(density_charges_sizes[c_size][charge_g]))
+					
+					#absolute density
+					density_charges_sizes[c_size][charge_g] /= float(tmp_normalisation)
+					
+					#update scale
+					max_density_charges = max(max_density_charges, max(density_charges_sizes[c_size][charge_g]))
+					min_density_charges = min(min_density_charges, min(density_charges_sizes[c_size][charge_g]))
+			
+			#total charge: absolute density
+			density_charges_sizes[c_size]["total"] /= float(tmp_normalisation)
+			
+			#total charge: update scale
+			max_density_charges = max(max_density_charges, max(density_charges_sizes[c_size]["total"]))
+			min_density_charges = min(min_density_charges, min(density_charges_sizes[c_size]["total"]))
+
 	
 	#groups
 	#======
@@ -1974,61 +2007,70 @@ def calculate_stats():													#DONE
 			#density profile: particles
 			#--------------------------
 			for part in particles_def["labels"]:
-				#% of particles covered
-				groups_coverage["particles"]["avg"][g_index][part] = round(groups_coverage["particles"]["avg"][g_index][part],1)
-				if groups_coverage["particles"]["nb"][g_index][part] > 1:
-					groups_coverage["particles"]["std"][g_index][part] = round(math.sqrt(groups_coverage["particles"]["std"][g_index][part] / float(groups_coverage["particles"]["nb"][g_index][part])),1)
-				else:
-					groups_coverage["particles"]["std"][g_index][part] = "nan"
-			
-				#asbolute density
-				density_particles_groups_nb[g_index][part] /= float(tmp_normalisation)
-
-				#relative density
-				if np.sum(density_particles_groups_nb[g_index][part]) > 0:					
-					density_particles_groups_pc[g_index][part] = density_particles_groups_nb[g_index][part] / float(np.sum(density_particles_groups_nb[g_index][part]))
-
-				#update scale
-				max_density_particles_pc = max(max_density_particles_pc, max(density_particles_groups_pc[g_index][part]))
-				if (part == "peptide" or part == "water") and args.residuesfilename != "no":
-					max_density_residues_pc = max(max_density_residues_pc, max(density_particles_groups_pc[g_index][part]))
+				if particles_def_pres[part]:
+					#% of particles covered
+					groups_coverage["particles"]["avg"][g_index][part] = round(groups_coverage["particles"]["avg"][g_index][part],1)
+					if groups_coverage["particles"]["nb"][g_index][part] > 1:
+						groups_coverage["particles"]["std"][g_index][part] = round(math.sqrt(groups_coverage["particles"]["std"][g_index][part] / float(groups_coverage["particles"]["nb"][g_index][part])),1)
+					else:
+						groups_coverage["particles"]["std"][g_index][part] = "nan"
+				
+					#asbolute density
+					density_particles_groups_nb[g_index][part] /= float(tmp_normalisation)
+	
+					#relative density
+					if np.sum(density_particles_groups_nb[g_index][part]) > 0:					
+						density_particles_groups_pc[g_index][part] = density_particles_groups_nb[g_index][part] / float(np.sum(density_particles_groups_nb[g_index][part]))
+	
+					#update scale
+					max_density_particles_pc = max(max_density_particles_pc, max(density_particles_groups_pc[g_index][part]))
+					if (part == "peptide" or part == "water") and args.residuesfilename != "no":
+						max_density_residues_pc = max(max_density_residues_pc, max(density_particles_groups_pc[g_index][part]))
 			
 			#density profile: residues
 			#-------------------------
 			if args.residuesfilename != "no":
 				for res in residues_def["labels"]:
-					#% of particles covered
-					groups_coverage["residues"]["avg"][g_index][res] = round(groups_coverage["residues"]["avg"][g_index][res],1)
-					if groups_coverage["residues"]["nb"][g_index][res] > 1:
-						groups_coverage["residues"]["std"][g_index][res] = round(math.sqrt(groups_coverage["residues"]["std"][g_index][res] / float(groups_coverage["residues"]["nb"][g_index][res])),1)
-					else:
-						groups_coverage["residues"]["std"][g_index][res] = "nan"
-					
-					#absolute density
-					density_residues_groups_nb[g_index][res] /= float(tmp_normalisation)
-
-					#relative density
-					density_residues_groups_pc[g_index][res] = density_residues_groups_nb[g_index][res] / float(np.sum(density_particles_groups_nb[g_index]["peptide"]))
+					if residues_def_pres[res]:
+						#% of particles covered
+						groups_coverage["residues"]["avg"][g_index][res] = round(groups_coverage["residues"]["avg"][g_index][res],1)
+						if groups_coverage["residues"]["nb"][g_index][res] > 1:
+							groups_coverage["residues"]["std"][g_index][res] = round(math.sqrt(groups_coverage["residues"]["std"][g_index][res] / float(groups_coverage["residues"]["nb"][g_index][res])),1)
+						else:
+							groups_coverage["residues"]["std"][g_index][res] = "nan"
+						
+						#absolute density
+						density_residues_groups_nb[g_index][res] /= float(tmp_normalisation)
+	
+						#relative density
+						density_residues_groups_pc[g_index][res] = density_residues_groups_nb[g_index][res] / float(np.sum(density_particles_groups_nb[g_index]["peptide"]))
 		
 			#density profile: charges
 			#------------------------
 			if args.chargesfilename != "no":
-				for charge_g in charges_groups.keys() + ["total"]:
-					#% of particles covered
-					if charge_g != "total":
+				for charge_g in charges_groups.keys():
+					if charges_groups_pres[charge_g]:
+						#% of particles covered
 						groups_coverage["charges"]["avg"][g_index][charge_g] = round(groups_coverage["charges"]["avg"][g_index][charge_g],1)
 						if groups_coverage["charges"]["nb"][g_index][charge_g] > 1:
 							groups_coverage["charges"]["std"][g_index][charge_g] = round(math.sqrt(groups_coverage["charges"]["std"][g_index][charge_g] / float(groups_coverage["charges"]["nb"][g_index][charge_g])),1)
 						else:
 							groups_coverage["charges"]["std"][g_index][charge_g] = "nan"
-					
-					#absolute density
-					density_charges_groups[g_index][charge_g] /= float(tmp_normalisation)
-					
-					#update scale
-					max_density_charges = max(max_density_charges, max(density_charges_groups[g_index][charge_g]))
-					min_density_charges = min(min_density_charges, min(density_charges_groups[g_index][charge_g]))
-	
+						
+						#absolute density
+						density_charges_groups[g_index][charge_g] /= float(tmp_normalisation)
+						
+						#update scale
+						max_density_charges = max(max_density_charges, max(density_charges_groups[g_index][charge_g]))
+						min_density_charges = min(min_density_charges, min(density_charges_groups[g_index][charge_g]))
+		
+				#total charge: absolute density
+				density_charges_groups[g_index]["total"] /= float(tmp_normalisation)
+				
+				#total charge: update scale
+				max_density_charges = max(max_density_charges, max(density_charges_groups[g_index]["total"]))
+				min_density_charges = min(min_density_charges, min(density_charges_groups[g_index]["total"]))
+
 	return
 
 #=========================================================================================
@@ -2106,7 +2148,10 @@ def density_write_particles():											#DONE
 			results = str(bins_labels[n])
 			for part_index in range(0,len(particles_def["labels"])):
 				part = particles_def["labels"][part_index]
-				results += "	" + "{:.6e}".format(density_particles_sizes_pc[c_size][part][n])
+				if particles_def_pres[part]:
+					results += "	" + "{:.6e}".format(density_particles_sizes_pc[c_size][part][n])
+				else:
+					results += "	0"
 			output_xvg.write(results + "\n")	
 		output_xvg.close()
 				
@@ -2169,7 +2214,10 @@ def density_write_particles():											#DONE
 				results = str(bins_labels[n])
 				for part_index in range(0,len(particles_def["labels"])):
 					part = particles_def["labels"][part_index]
-					results += "	" + "{:.6e}".format(density_particles_groups_pc[g_index][part][n])
+					if particles_def_pres[part]:
+						results += "	" + "{:.6e}".format(density_particles_groups_pc[g_index][part][n])
+					else:
+						results += "	0"
 				output_xvg.write(results + "\n")	
 			output_xvg.close()
 
@@ -2253,7 +2301,10 @@ def density_write_residues():											#DONE
 			results = str(bins_labels[n])
 			for res_index in range(0,len(residues_def["labels"])):
 				res = residues_def["labels"][res_index]
-				results += "	" + "{:.6e}".format(density_residues_sizes_pc[c_size][res][n])
+				if residues_def_pres[res]:
+					results += "	" + "{:.6e}".format(density_residues_sizes_pc[c_size][res][n])
+				else:
+					results += "	0"
 			results += "	" + "{:.6e}".format(density_particles_sizes_pc[c_size]["peptide"][n])
 			if water_pres:
 				results += "	" + "{:.6e}".format(density_particles_sizes_pc[c_size]["water"][n])
@@ -2328,7 +2379,10 @@ def density_write_residues():											#DONE
 				results = str(bins_labels[n])
 				for res_index in range(0,len(residues_def["labels"])):
 					res = residues_def["labels"][res_index]
-					results += "	" + "{:.6e}".format(density_residues_groups_pc[g_index][res][n])
+					if residues_def_pres[res]:
+						results += "	" + "{:.6e}".format(density_residues_groups_pc[g_index][res][n])
+					else:
+						results += "	0"
 				results += "	" + "{:.6e}".format(density_particles_groups_pc[g_index]["peptide"][n])
 				if water_pres:
 					results += "	" + "{:.6e}".format(density_particles_groups_pc[g_index]["water"][n])
@@ -2411,7 +2465,10 @@ def density_write_charges():											#DONE
 			results = str(bins_labels[n])
 			for q_index in range(0,len(charges_groups_keys)):
 				charge_g = charges_groups_keys[q_index]
-				results += "	" + "{:.6e}".format(density_charges_sizes[c_size][charge_g][n])
+				if charges_groups_pres[charge_g]:
+					results += "	" + "{:.6e}".format(density_charges_sizes[c_size][charge_g][n])
+				else:
+					results += "	0"
 			results += "	" + "{:.6e}".format(density_charges_sizes[c_size]["total"][n])
 			output_xvg.write(results + "\n")	
 		output_xvg.close()
@@ -2481,7 +2538,10 @@ def density_write_charges():											#DONE
 				results = str(bins_labels[n])
 				for q_index in range(0,len(charges_groups_keys)):
 					charge_g = charges_groups_keys[q_index]
-					results += "	" + "{:.6e}".format(density_charges_groups[g_index][charge_g][n])
+					if charges_groups_pres[charge_g]:
+						results += "	" + "{:.6e}".format(density_charges_groups[g_index][charge_g][n])
+					else:
+						results += "	0"
 				results += "	" + "{:.6e}".format(density_charges_groups[g_index]["total"][n])
 				output_xvg.write(results + "\n")	
 			output_xvg.close()
@@ -2511,7 +2571,8 @@ def density_graph_particles():											#DONE
 		#plot data
 		ax = fig.add_subplot(111)
 		for part in particles_def["labels"]:
-			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size][part], color = particles_def["colour"][part], label = str(part))
+			if particles_def_pres[part]:
+				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size][part], color = particles_def["colour"][part], label = str(part))
 		plt.vlines(z_upper, 0, max_density_particles_pc, linestyles = 'dashed')
 		plt.vlines(z_lower, 0, max_density_particles_pc, linestyles = 'dashed')
 		plt.vlines(0, 0, max_density_particles_pc, linestyles = 'dashdot')
@@ -2553,7 +2614,8 @@ def density_graph_particles():											#DONE
 			#plot data
 			ax = fig.add_subplot(111)
 			for part in particles_def["labels"]:
-				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index][part], color = particles_def["colour"][part], label = str(part))
+				if particles_def_pres[part]:
+					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index][part], color = particles_def["colour"][part], label = str(part))
 			plt.vlines(z_upper, 0, max_density_particles_pc, linestyles = 'dashed')
 			plt.vlines(z_lower, 0, max_density_particles_pc, linestyles = 'dashed')
 			plt.vlines(0, 0, max_density_particles_pc, linestyles = 'dashdot')
@@ -2605,7 +2667,8 @@ def density_graph_residues():											#DONE
 		#plot data
 		ax = fig.add_subplot(111)
 		for res in residues_def["labels"]:
-			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_sizes_pc[c_size][res], color = residues_def["colour"][res], label = str(res))
+			if residues_def_pres[res]:
+				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_sizes_pc[c_size][res], color = residues_def["colour"][res], label = str(res))
 		plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
 		if water_pres:
 			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size]["water"], color = particles_def["colour"]["water"], label = "water")
@@ -2653,7 +2716,8 @@ def density_graph_residues():											#DONE
 			#plot data
 			ax = fig.add_subplot(111)
 			for res in residues_def["labels"]:
-				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_groups_pc[g_index][res], color = residues_def["colour"][res], label = str(res))
+				if residues_def_pres[res]:
+					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_groups_pc[g_index][res], color = residues_def["colour"][res], label = str(res))
 			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
 			if water_pres:
 				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index]["water"], color = particles_def["colour"]["water"], label = "water")
@@ -2709,7 +2773,7 @@ def density_graph_charges():											#DONE
 		for charge_g in charges_groups.keys() + ["total"]:
 			if charge_g == "total":
 				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_sizes[c_size][charge_g], color = charges_colours[charge_g], label = str(charge_g), linewidth = 2)
-			else:
+			elif charges_groups_pres[charge_g]:
 				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_sizes[c_size][charge_g], color = charges_colours[charge_g], label = str(charge_g))
 		plt.vlines(z_upper, min_density_charges, max_density_charges, linestyles = 'dashed')
 		plt.vlines(z_lower, min_density_charges, max_density_charges, linestyles = 'dashed')
@@ -2758,7 +2822,7 @@ def density_graph_charges():											#DONE
 			for charge_g in charges_groups.keys() + ["total"]:
 				if charge_g == "total":
 					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_groups[g_index][charge_g], color = charges_colours[charge_g], label = str(charge_g), linewidth = 2)
-				else:
+				elif charges_groups_pres[charge_g]:
 					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_charges_groups[g_index][charge_g], color = charges_colours[charge_g], label = str(charge_g))
 			plt.vlines(z_upper, min_density_charges, max_density_charges, linestyles = 'dashed')
 			plt.vlines(z_lower, min_density_charges, max_density_charges, linestyles = 'dashed')
