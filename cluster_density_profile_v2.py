@@ -1703,6 +1703,8 @@ def calculate_density(box_dim, f_nb):									#DONE
 					z_lower += cog_lw_rotated[2] - norm_z_middle
 					z_boundaries_nb_data += 1
 					
+					#calculate new cog of cluster
+					cluster_cog = calculate_cog(np.dot(norm_rot, tmp_c_sele_coordinates.T).T, box_dim)
 				else:
 					norm_z_middle = tmp_z_mid
 									
@@ -1721,7 +1723,6 @@ def calculate_density(box_dim, f_nb):									#DONE
 						#rotate coordinates so that the local normal of the bilayer is // to the z axis
 						if args.normal != 'z':
 							tmp_coord = np.dot(norm_rot, tmp_coord.T).T
-							cluster_cog = calculate_cog(tmp_coord, box_dim)
 						
 						#center cluster (x,y) coordinates on its cog (x,y) coordinates
 						tmp_coord[:,0] -= cluster_cog[0]
@@ -1756,7 +1757,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 						#add number of particles within each slice					
 						tmp_bins_nb = np.zeros(2*bins_nb)
 						bin_rel = np.floor(tmp_coord_within[:,2]/float(args.slices_thick)).astype(int)
-						bin_abs = bin_rel[abs(bin_rel) < bins_nb_max] + int(bins_nb)
+						bin_abs = bin_rel[abs(bin_rel) < bins_nb_max] + int(bins_nb)			#the + int(bins_nb) allows to only have positive bin indices
 						if len(bin_abs) > 0:				
 							tmp_bins_nb = np.histogram(bin_abs, np.arange(2*bins_nb + 1))[0]
 						density_particles_sizes_nb[c_size][part] += tmp_bins_nb
@@ -1778,7 +1779,6 @@ def calculate_density(box_dim, f_nb):									#DONE
 							#rotate coordinates so that the local normal of the bilayer is // to the z axis
 							if args.normal != 'z':
 								tmp_coord = np.dot(norm_rot, tmp_coord.T).T
-								cluster_cog = calculate_cog(tmp_coord, box_dim)
 
 							#center cluster (x,y) coordinates on its cog (x,y) coordinates
 							tmp_coord[:,0] -= cluster_cog[0]
@@ -1837,7 +1837,6 @@ def calculate_density(box_dim, f_nb):									#DONE
 								#rotate coordinates so that the local normal of the bilayer is // to the z axis
 								if args.normal != 'z':
 									tmp_coord = np.dot(norm_rot, tmp_coord.T).T
-									cluster_cog = calculate_cog(tmp_coord, box_dim)
 
 								#center cluster coordinates on the (x,y) coordinates of its cog
 								tmp_coord[:,0] -= cluster_cog[0]
@@ -2522,7 +2521,7 @@ def density_graph_particles():											#DONE
 		plt.ylabel('relative particles frequency [$\AA^{-3}$]')
 		
 		#save figure
-		ax.set_xlim(0, 2*bins_nb)
+		ax.set_xlim(-args.max_z_dist, args.max_z_dist)
 		ax.set_ylim(0, max_density_particles_pc)
 		ax.spines['top'].set_visible(False)
 		ax.spines['right'].set_visible(False)
