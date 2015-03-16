@@ -1678,7 +1678,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 						tmp_lip_coords_within = np.concatenate((tmp_lip_coords_up-cog_up,tmp_lip_coords_lw-cog_lw))
 						svd_U, svd_D, svd_V = np.linalg.svd(tmp_lip_coords_within)
 						norm_vec = svd_V[2].reshape((3,1))
-						#orientate the normal vector so that it goes from inside (lower) to outside (upper)
+						#orientate the normal vector so that it goes from inside (lower) to outside (upper) (IMPORTANT: ensures correct + sign convention)
 						tmp_delta_cog = cog_up - cog_lw
 						tmp_delta_cog = tmp_delta_cog.reshape((3,1))
 						if np.dot(norm_vec[:,0],tmp_delta_cog[:,0]) < 0:
@@ -1985,9 +1985,13 @@ def calculate_stats():													#DONE
 				density_particles_groups_nb[g_index][part] /= float(tmp_normalisation)
 
 				#relative density
-				if np.sum(density_particles_groups_nb[g_index][part]) > 0:
+				if np.sum(density_particles_groups_nb[g_index][part]) > 0:					
 					density_particles_groups_pc[g_index][part] = density_particles_groups_nb[g_index][part] / float(np.sum(density_particles_groups_nb[g_index][part]))
-				
+					#debug
+					print g_index
+					print density_particles_groups_nb[g_index][part]
+					print density_particles_groups_pc[g_index][part]
+
 				#update scale
 				max_density_particles_pc = max(max_density_particles_pc, max(density_particles_groups_pc[g_index][part]))
 				if (part == "peptide" or part == "water") and args.residuesfilename != "no":
