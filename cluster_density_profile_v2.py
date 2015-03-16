@@ -252,7 +252,7 @@ Density profile options
 --slices_thick	0.5 	: z thickness of the slices (Angstrom)
 --slices_radius	30 	: radius of the slices (Angstrom)
 --normal	z	: local normal to bilayer ('z', 'cog' or 'svd'), see note 5
---normal_d	60	: distance of points to take into account for local normal, see note 5
+--normal_d	50	: distance of points to take into account for local normal, see note 5
 
 Lipids identification  
 -----------------------------------------------------
@@ -292,7 +292,7 @@ parser.add_argument('--range', nargs=1, dest='max_z_dist', default=[40], type=fl
 parser.add_argument('--slices_thick', nargs=1, dest='slices_thick', default=[0.5], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--slices_radius', nargs=1, dest='slices_radius', default=[30], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--normal', dest='normal', choices=['z','cog','svd'], default='z', help=argparse.SUPPRESS)
-parser.add_argument('--normal_d', nargs=1, dest='normal_d', default=[60], type=float, help=argparse.SUPPRESS)
+parser.add_argument('--normal_d', nargs=1, dest='normal_d', default=[50], type=float, help=argparse.SUPPRESS)
 
 #lipids identification options
 parser.add_argument('--beads', nargs=1, dest='beadsfilename', default=['no'], help=argparse.SUPPRESS)
@@ -1476,6 +1476,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 	loc_z_axis = np.array([0,0,1])
 	loc_z_axis = loc_z_axis.reshape((3,1))
 	
+	
 	#retrieve coordinates arrays (pre-processing saves time as MDAnalysis functions are quite slow and we need to make such calls a few times)
 	tmp_lip_coords = {l: leaflet_sele[l].coordinates() for l in ["lower","upper"]}
 	
@@ -1487,7 +1488,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 		z_upper += tmp_zu - tmp_z_mid
 		z_lower += tmp_zl - tmp_z_mid
 		z_boundaries_nb_data += 1
-	
+
 	#case: no proteins
 	#=================
 	if not protein_pres:
@@ -1598,8 +1599,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 			dist_min_lower = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["lower"], box_dim), axis = 1)
 			dist_min_upper = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["upper"], box_dim), axis = 1)
 			dist = dist_min_upper - dist_min_lower
-			if np.size(dist[dist>0]) != np.size(dist) and np.size(dist[dist>0]) !=0:
-				
+			if np.size(dist[dist>0]) != np.size(dist) and np.size(dist[dist>0]) !=0:				
 				c_size = np.size(cluster)
 				#store new cluster size and add entry if necessary
 				if c_size not in sizes_sampled:
@@ -1675,7 +1675,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 						norm_vec = norm_vec.reshape((3,1))
 					#identify normal vector: case svd
 					else:
-						tmp_lip_coords_within = np.concatenate((tmp_lip_coords_up-cog_up,tmp_lip_coords_lw-cog_lw))
+						tmp_lip_coords_within = np.concatenate((tmp_lip_coords_up_within-cog_up,tmp_lip_coords_lw_within-cog_lw))
 						svd_U, svd_D, svd_V = np.linalg.svd(tmp_lip_coords_within)
 						norm_vec = svd_V[2].reshape((3,1))
 						#orientate the normal vector so that it goes from inside (lower) to outside (upper) (IMPORTANT: ensures correct + sign convention)
