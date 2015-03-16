@@ -1987,10 +1987,6 @@ def calculate_stats():													#DONE
 				#relative density
 				if np.sum(density_particles_groups_nb[g_index][part]) > 0:					
 					density_particles_groups_pc[g_index][part] = density_particles_groups_nb[g_index][part] / float(np.sum(density_particles_groups_nb[g_index][part]))
-					#debug
-					print g_index
-					print density_particles_groups_nb[g_index][part]
-					print density_particles_groups_pc[g_index][part]
 
 				#update scale
 				max_density_particles_pc = max(max_density_particles_pc, max(density_particles_groups_pc[g_index][part]))
