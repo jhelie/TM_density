@@ -13,14 +13,14 @@ import os.path
 # create parser
 #=========================================================================================
 version_nb = "0.1.0"
-parser = argparse.ArgumentParser(prog = 'cluster_density_profile_v2', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
+parser = argparse.ArgumentParser(prog = 'cluster_density_profile', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
-*********************************************************
+******************************************************
 v''' + version_nb + '''
 author: Jean Helie (jean.helie@bioch.ox.ac.uk)
-git: https://github.com/jhelie/cluster_density_profile_v2
+git: https://github.com/jhelie/cluster_density_profile
 DOI: 
-*********************************************************
+******************************************************
 
 [ DESCRIPTION ]
  
