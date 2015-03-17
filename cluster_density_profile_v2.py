@@ -606,9 +606,9 @@ def set_particles():													#DONE
 	#use default particles definition
 	#--------------------------------
 	if args.particlesfilename == "mine":
-		particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
+		#particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
 		#debug
-		#particles_def["labels"] = ["peptide"]
+		particles_def["labels"] = ["peptide"]
 		
 		#peptide
 		particles_def["group"]["peptide"] = "peptide"					#very dark grey
@@ -1505,7 +1505,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 	#calculate middle of bilayer and relative coordinate of upper and lower leaflets assuming the z is the normal to the bilayer
 	tmp_zu = np.average(tmp_lip_coords["upper"], axis = 0)[2]
 	tmp_zl = np.average(tmp_lip_coords["lower"], axis = 0)[2]
-	tmp_z_mid = tmp_zl + (tmp_zu - tmp_zl)/float(2)
+	tmp_z_mid = tmp_zl + (tmp_zu - tmp_zl)/float(2)	
 	if args.normal == 'z':
 		z_upper += tmp_zu - tmp_z_mid
 		z_lower += tmp_zl - tmp_z_mid
@@ -1617,7 +1617,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 			c_sele = MDAnalysis.core.AtomGroup.AtomGroup([])
 			for p_index in cluster:
 				c_sele += proteins_sele[p_index]
-			tmp_c_sele_coordinates = c_sele.coordinates()
+			tmp_c_sele_coordinates = c_sele.coordinates()			
 			dist_min_lower = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["lower"], box_dim), axis = 1)
 			dist_min_upper = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["upper"], box_dim), axis = 1)
 			dist = dist_min_upper - dist_min_lower
@@ -1660,36 +1660,30 @@ def calculate_density(box_dim, f_nb):									#DONE
 				if args.cluster_groups_file != "no":
 					groups_nb_clusters[g_index] += 1
 	
-				#get coord of cluster center of geometry
+				#get coord of cluster center of geometry in initial referential
 				cluster_cog = calculate_cog(tmp_c_sele_coordinates, box_dim)
-
+				
 				#calculate local normal to bilayer
 				#---------------------------------
 				if args.normal != 'z':
-					#identify neighbouring particles in each leaflet
-					#upper
+					#switch to cluster_cog referential
 					tmp_lip_coords_up = tmp_lip_coords["upper"] - cluster_cog
-					tmp_lip_coords_up[:,0] -= (np.floor(2*tmp_lip_coords_up[:,0]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_up[:,0]))/float(2)) * box_dim[0]
-					tmp_lip_coords_up[:,1] -= (np.floor(2*tmp_lip_coords_up[:,1]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_up[:,1]))/float(2)) * box_dim[1]
-					tmp_lip_coords_up[:,2] -= (np.floor(2*tmp_lip_coords_up[:,2]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_up[:,2]))/float(2)) * box_dim[2]
+					tmp_lip_coords_lw = tmp_lip_coords["lower"] - cluster_cog
+										
+					#identify neighbouring particles in each leaflet
 					tmp_lip_coords_up_within = tmp_lip_coords_up[tmp_lip_coords_up[:,0]**2 + tmp_lip_coords_up[:,1]**2 + tmp_lip_coords_up[:,2]**2 < args.normal_d**2]
+					tmp_lip_coords_lw_within = tmp_lip_coords_lw[tmp_lip_coords_lw[:,0]**2 + tmp_lip_coords_lw[:,1]**2 + tmp_lip_coords_lw[:,2]**2 < args.normal_d**2]
 					if np.shape(tmp_lip_coords_up_within)[0] == 0:
 						print "\nWarning: no neighbouring particles found in the upper leaflet for current cluster. Check the --normal_d option.\n"
 						continue
 					else:
 						cog_up = np.average(tmp_lip_coords_up_within, axis = 0)
-					#lower
-					tmp_lip_coords_lw = tmp_lip_coords["lower"] - cluster_cog
-					tmp_lip_coords_lw[:,0] -= (np.floor(2*tmp_lip_coords_lw[:,0]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_lw[:,0]))/float(2)) * box_dim[0]
-					tmp_lip_coords_lw[:,1] -= (np.floor(2*tmp_lip_coords_lw[:,1]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_lw[:,1]))/float(2)) * box_dim[1]
-					tmp_lip_coords_lw[:,2] -= (np.floor(2*tmp_lip_coords_lw[:,2]/float(box_dim[0])) + (1-np.sign(tmp_lip_coords_lw[:,2]))/float(2)) * box_dim[2]
-					tmp_lip_coords_lw_within = tmp_lip_coords_lw[tmp_lip_coords_lw[:,0]**2 + tmp_lip_coords_lw[:,1]**2 + tmp_lip_coords_lw[:,2]**2 < args.normal_d**2]
 					if np.shape(tmp_lip_coords_lw_within)[0] == 0:
 						print "\nWarning: no neighbouring particles found in the lower leaflet for current cluster. Check the --normal_d option.\n"
 						continue
 					else:
 						cog_lw = np.average(tmp_lip_coords_lw_within, axis = 0)
-
+					
 					#identify normal vector: case cog
 					if args.normal == 'cog':
 						norm_vec = cog_up - cog_lw
@@ -1713,20 +1707,24 @@ def calculate_density(box_dim, f_nb):									#DONE
 					norm_ax_skew_sym = norm_vec*loc_z_axis.T - loc_z_axis*norm_vec.T
 					norm_rot = np.identity(3) - norm_ax_skew_sym + (1-norm_cos)/float(norm_sin**2)*np.dot(norm_ax_skew_sym,norm_ax_skew_sym)
 				
+					#ROTATION
+					#rotate neighbouring bilayer in local cluster referential
+					tmp_lip_coords_up_within_rotated = np.dot(norm_rot, tmp_lip_coords_up_within.T).T
+					tmp_lip_coords_lw_within_rotated = np.dot(norm_rot, tmp_lip_coords_lw_within.T).T
+					
 					#identify z coord of local middle of bilayer after rotation
-					tmp_lip_coords_up_within_rotated = np.dot(norm_rot, tmp_lip_coords["upper"].T).T
-					tmp_lip_coords_lw_within_rotated = np.dot(norm_rot, tmp_lip_coords["lower"].T).T
-					cog_up_rotated = calculate_cog(tmp_lip_coords_up_within_rotated, box_dim)
-					cog_lw_rotated = calculate_cog(tmp_lip_coords_lw_within_rotated, box_dim)
+					cog_up_rotated = np.average(tmp_lip_coords_up_within_rotated, axis = 0)
+					cog_lw_rotated = np.average(tmp_lip_coords_lw_within_rotated, axis = 0)
 					norm_z_middle = cog_lw_rotated[2] + (cog_up_rotated[2] - cog_lw_rotated[2])/float(2)
 					
+					#TRANSLATION
 					#store relative coordinate of local upper and lower leaflets (once they've been rotated in the x,y plane)
 					z_upper += cog_up_rotated[2] - norm_z_middle
 					z_lower += cog_lw_rotated[2] - norm_z_middle
 					z_boundaries_nb_data += 1
-					
-					#calculate new cog of cluster
-					cluster_cog = calculate_cog(np.dot(norm_rot, tmp_c_sele_coordinates.T).T, box_dim)
+															
+					#calculate cog of rotated cluster in local cluster referential
+					cluster_cog_rot = calculate_cog(np.dot(norm_rot, (tmp_c_sele_coordinates-cluster_cog).T).T, box_dim)
 				else:
 					norm_z_middle = tmp_z_mid
 									
@@ -1734,33 +1732,35 @@ def calculate_density(box_dim, f_nb):									#DONE
 				#--------------------------
 				for part in particles_def["labels"]:
 					if particles_def_pres[part]:
-						#select particles
+						#select particles and retrieve their original coordinates
 						if part == "peptide":
-							tmp_part_sele = c_sele
+							tmp_coord = tmp_c_sele_coordinates
 						else:
 							tmp_part_sele = particles_def["sele"][part]
-							
-						#retrieve original coordinates
-						tmp_coord = tmp_part_sele.coordinates()
+							tmp_coord = tmp_part_sele.coordinates()
 						
-						#rotate coordinates so that the local normal of the bilayer is // to the z axis
+						#performs centering/rotating of the referential
 						if args.normal != 'z':
+							#switch to cluster_cog referential
+							tmp_coord -= cluster_cog
+							
+							#rotate coordinates so that the local normal of the bilayer is // to the z axis
 							tmp_coord = np.dot(norm_rot, tmp_coord.T).T
 						
-						#center cluster (x,y) coordinates on its cog (x,y) coordinates
-						tmp_coord[:,0] -= cluster_cog[0]
-						tmp_coord[:,1] -= cluster_cog[1]
-										
-						#center cluster z coordinates on the bilayer center z coordinate
-						tmp_coord[:,2] -= norm_z_middle
-					
-						#deal with pbc (with the cluster coords set at 0 the coords indirectly represent distances so need to use their 'minimum' absolute values)
-						# -> we test if we are further away from 0 than half the box dim, if so we translate by a box dim.
-						# -> the only trick is that for negative coord floor returns a number offset by 1 compared to what we'd like (-1 = within range, -2 - outside), so we need to add +1 to this for negative coord (hence the bit with sign)
-						tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
-						tmp_coord[:,1] -= (np.floor(2*tmp_coord[:,1]/float(box_dim[1])) + (1-np.sign(tmp_coord[:,1]))/float(2)) * box_dim[1]
-						tmp_coord[:,2] -= (np.floor(2*tmp_coord[:,2]/float(box_dim[2])) + (1-np.sign(tmp_coord[:,2]))/float(2)) * box_dim[2]
+							#center around cluster in the x and y direction
+							tmp_coord[:,0] -= cluster_cog_rot[0]
+							tmp_coord[:,1] -= cluster_cog_rot[1]
 
+							#center around middle of rotated bilayer in z
+							tmp_coord[:,2] -= norm_z_middle
+						else:					
+							#center around cluster in the x and y direction
+							tmp_coord[:,0] -= cluster_cog[0]
+							tmp_coord[:,1] -= cluster_cog[1]
+											
+							#center z coordinates on the bilayer center z coordinate
+							tmp_coord[:,2] -= norm_z_middle
+					
 						#keep those within the specified radius
 						tmp_coord_within = tmp_coord[tmp_coord[:,0]**2 + tmp_coord[:,1]**2 < args.slices_radius**2]
 	
@@ -1793,27 +1793,31 @@ def calculate_density(box_dim, f_nb):									#DONE
 				if args.residuesfilename != "no":
 					for res in residues_def["labels"]:
 						if residues_def_pres[res]:
-							#select particles of given residues
+							#select particles of given residues and retrieve their original coordinates
 							tmp_res_sele = c_sele.selectAtoms(residues_def["sele_string"][res])
-								
-							#retrieve original coordinates
-							tmp_coord = tmp_res_sele.coordinates()
+							tmp_coord = tmp_res_sele.coordinates()							
 							
-							#rotate coordinates so that the local normal of the bilayer is // to the z axis
+							#performs centering/rotating of the referential
 							if args.normal != 'z':
+								#switch to cluster_cog referential
+								tmp_coord -= cluster_cog
+								
+								#rotate coordinates so that the local normal of the bilayer is // to the z axis
 								tmp_coord = np.dot(norm_rot, tmp_coord.T).T
-
-							#center cluster (x,y) coordinates on its cog (x,y) coordinates
-							tmp_coord[:,0] -= cluster_cog[0]
-							tmp_coord[:,1] -= cluster_cog[1]
-											
-							#center cluster z coordinates on the bilayer center z coordinate
-							tmp_coord[:,2] -= norm_z_middle
-						
-							#deal with pbc and center axis on 0
-							tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
-							tmp_coord[:,1] -= (np.floor(2*tmp_coord[:,1]/float(box_dim[1])) + (1-np.sign(tmp_coord[:,1]))/float(2)) * box_dim[1]
-							tmp_coord[:,2] -= (np.floor(2*tmp_coord[:,2]/float(box_dim[2])) + (1-np.sign(tmp_coord[:,2]))/float(2)) * box_dim[2]
+							
+								#center around cluster in the x and y direction
+								tmp_coord[:,0] -= cluster_cog_rot[0]
+								tmp_coord[:,1] -= cluster_cog_rot[1]
+	
+								#center around middle of rotated bilayer in z
+								tmp_coord[:,2] -= norm_z_middle
+							else:					
+								#center around cluster in the x and y direction
+								tmp_coord[:,0] -= cluster_cog[0]
+								tmp_coord[:,1] -= cluster_cog[1]
+												
+								#center z coordinates on the bilayer center z coordinate
+								tmp_coord[:,2] -= norm_z_middle
 												
 							#keep those within the specified radius
 							tmp_coord_within = tmp_coord[tmp_coord[:,0]**2 + tmp_coord[:,1]**2 < args.slices_radius**2]
@@ -1854,25 +1858,30 @@ def calculate_density(box_dim, f_nb):									#DONE
 								else:
 									tmp_q_sele = charges_groups[charge_g]["sele"][q]
 								if tmp_q_sele.numberOfAtoms() > 0:
-														
-									#retrieve original coordinates
+									#retrieve original coordinates of charged sele
 									tmp_coord = tmp_q_sele.coordinates()
 									
-									#rotate coordinates so that the local normal of the bilayer is // to the z axis
+									#performs centering/rotating of the referential
 									if args.normal != 'z':
+										#switch to cluster_cog referential
+										tmp_coord -= cluster_cog
+										
+										#rotate coordinates so that the local normal of the bilayer is // to the z axis
 										tmp_coord = np.dot(norm_rot, tmp_coord.T).T
-	
-									#center cluster coordinates on the (x,y) coordinates of its cog
-									tmp_coord[:,0] -= cluster_cog[0]
-									tmp_coord[:,1] -= cluster_cog[1]
-								
-									#center cluster z coordinates on the bilayer center z coordinate
-									tmp_coord[:,2] -= norm_z_middle
+									
+										#center around cluster in the x and y direction
+										tmp_coord[:,0] -= cluster_cog_rot[0]
+										tmp_coord[:,1] -= cluster_cog_rot[1]
 			
-									#deal with pbc and center axis on 0
-									tmp_coord[:,0] -= (np.floor(2*tmp_coord[:,0]/float(box_dim[0])) + (1-np.sign(tmp_coord[:,0]))/float(2)) * box_dim[0]
-									tmp_coord[:,1] -= (np.floor(2*tmp_coord[:,1]/float(box_dim[1])) + (1-np.sign(tmp_coord[:,1]))/float(2)) * box_dim[1]
-									tmp_coord[:,2] -= (np.floor(2*tmp_coord[:,2]/float(box_dim[2])) + (1-np.sign(tmp_coord[:,2]))/float(2)) * box_dim[2]
+										#center around middle of rotated bilayer in z
+										tmp_coord[:,2] -= norm_z_middle
+									else:					
+										#center around cluster in the x and y direction
+										tmp_coord[:,0] -= cluster_cog[0]
+										tmp_coord[:,1] -= cluster_cog[1]
+														
+										#center z coordinates on the bilayer center z coordinate
+										tmp_coord[:,2] -= norm_z_middle
 									
 									#keep those within the specified radius
 									tmp_coord_within = tmp_coord[tmp_coord[:,0]**2 + tmp_coord[:,1]**2 < args.slices_radius**2]
@@ -1917,7 +1926,7 @@ def calculate_stats():													#DONE
 		global min_density_charges
 		max_density_charges = float("-inf")
 		min_density_charges = float("inf")
-	
+		
 	#coords
 	#======
 	z_upper /= float(z_boundaries_nb_data)
@@ -1932,7 +1941,10 @@ def calculate_stats():													#DONE
 		for part_g in particles_groups.keys():
 			tmp_normalisation[part_g] = 0
 			for part in particles_groups[part_g]:
-				tmp_normalisation[part_g] += np.sum(density_particles_sizes_nb[c_size][part])
+				try:
+					tmp_normalisation[part_g] += np.sum(density_particles_sizes_nb[c_size][part])
+				except:
+					pass
 		
 		#density profile: particles
 		#--------------------------
@@ -2905,7 +2917,7 @@ else:
 		f_nb = ts.frame
 		frames_nb[f_index] = f_nb
 		frames_time[f_index] = f_time
-
+		
 		#calculate densities
 		calculate_density(U.trajectory.ts.dimensions, f_index)
 	print ""
