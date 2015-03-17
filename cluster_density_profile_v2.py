@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.0.1"
+version_nb = "0.1.0"
 parser = argparse.ArgumentParser(prog = 'cluster_density_profile_v2', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 *********************************************************
@@ -1674,12 +1674,12 @@ def calculate_density(box_dim, f_nb):									#DONE
 					tmp_lip_coords_up_within = tmp_lip_coords_up[tmp_lip_coords_up[:,0]**2 + tmp_lip_coords_up[:,1]**2 + tmp_lip_coords_up[:,2]**2 < args.normal_d**2]
 					tmp_lip_coords_lw_within = tmp_lip_coords_lw[tmp_lip_coords_lw[:,0]**2 + tmp_lip_coords_lw[:,1]**2 + tmp_lip_coords_lw[:,2]**2 < args.normal_d**2]
 					if np.shape(tmp_lip_coords_up_within)[0] == 0:
-						print "\nWarning: no neighbouring particles found in the upper leaflet for current cluster. Check the --normal_d option.\n"
+						print "\nWarning: no neighbouring particles found in the upper leaflet for current cluster (size " + str(c_size) + "). Check the --normal_d option.\n"
 						continue
 					else:
 						cog_up = np.average(tmp_lip_coords_up_within, axis = 0)
 					if np.shape(tmp_lip_coords_lw_within)[0] == 0:
-						print "\nWarning: no neighbouring particles found in the lower leaflet for current cluster. Check the --normal_d option.\n"
+						print "\nWarning: no neighbouring particles found in the lower leaflet for current cluster (size " + str(c_size) + "). Check the --normal_d option.\n"
 						continue
 					else:
 						cog_lw = np.average(tmp_lip_coords_lw_within, axis = 0)
