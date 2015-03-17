@@ -606,9 +606,9 @@ def set_particles():													#DONE
 	#use default particles definition
 	#--------------------------------
 	if args.particlesfilename == "mine":
-		#particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
+		particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
 		#debug
-		particles_def["labels"] = ["peptide"]
+		#particles_def["labels"] = ["peptide"]
 		
 		#peptide
 		particles_def["group"]["peptide"] = "peptide"					#very dark grey
@@ -616,31 +616,31 @@ def set_particles():													#DONE
 		particles_def["sele_string"]["peptide"] = "protein"
 	
 		#lipids
-		#particles_def["group"]["CHOL"] = "CHOL"
-		#particles_def["group"]["POPC"] = "POPC"
-		#particles_def["group"]["POPE"] = "POPE"
-		#particles_def["group"]["POPS"] = "POPS"
-		#particles_def["colour"]["CHOL"] = "#bdbdbd"						#light grey
-		#particles_def["colour"]["POPC"] = "#41ab5d"						#dark green
-		#particles_def["colour"]["POPE"] = "#6a51a3"						#dark purple
-		#particles_def["colour"]["POPS"] = "#cc4c02"						#dark orange
-		#particles_def["sele_string"]["POPC"] = "resname POPC and name PO4"		
-		#particles_def["sele_string"]["POPE"] = "resname POPE and name PO4"
-		#particles_def["sele_string"]["POPS"] = "resname POPS and name PO4"
-		#particles_def["sele_string"]["CHOL"] = "resname CHOL and name ROH"
+		particles_def["group"]["CHOL"] = "CHOL"
+		particles_def["group"]["POPC"] = "POPC"
+		particles_def["group"]["POPE"] = "POPE"
+		particles_def["group"]["POPS"] = "POPS"
+		particles_def["colour"]["CHOL"] = "#bdbdbd"						#light grey
+		particles_def["colour"]["POPC"] = "#41ab5d"						#dark green
+		particles_def["colour"]["POPE"] = "#6a51a3"						#dark purple
+		particles_def["colour"]["POPS"] = "#cc4c02"						#dark orange
+		particles_def["sele_string"]["POPC"] = "resname POPC and name PO4"		
+		particles_def["sele_string"]["POPE"] = "resname POPE and name PO4"
+		particles_def["sele_string"]["POPS"] = "resname POPS and name PO4"
+		particles_def["sele_string"]["CHOL"] = "resname CHOL and name ROH"
 
-		##solvent
-		#particles_def["group"]["water"] = "water"
-		#particles_def["colour"]["water"] = "#1d91c0"					#dark cyan
-		#particles_def["sele_string"]["water"] = "resname W"
+		#solvent
+		particles_def["group"]["water"] = "water"
+		particles_def["colour"]["water"] = "#1d91c0"					#dark cyan
+		particles_def["sele_string"]["water"] = "resname W"
 
-		##ions
-		#particles_def["group"]["Na+"] = "Na+"
-		#particles_def["group"]["Cl-"] = "CL-"
-		#particles_def["colour"]["Cl-"] = "#fa9fb5"						#light red
-		#particles_def["colour"]["Na+"] = "#7bccc4"						#light blue
-		#particles_def["sele_string"]["Na+"] = "name NA+"
-		#particles_def["sele_string"]["Cl-"] = "name CL-"
+		#ions
+		particles_def["group"]["Na+"] = "Na+"
+		particles_def["group"]["Cl-"] = "CL-"
+		particles_def["colour"]["Cl-"] = "#fa9fb5"						#light red
+		particles_def["colour"]["Na+"] = "#7bccc4"						#light blue
+		particles_def["sele_string"]["Na+"] = "name NA+"
+		particles_def["sele_string"]["Cl-"] = "name CL-"
 	
 	#use user's particles definition
 	#-------------------------------	
@@ -684,7 +684,7 @@ def set_particles():													#DONE
 
 	#initialise presence of particles
 	#--------------------------------
-	particles_def_pres = {False for part in particles_def["labels"]}
+	particles_def_pres = {part: False for part in particles_def["labels"]}
 
 	#check whether a protein or peptide group has been defined to calculate residues details
 	#---------------------------------------------------------------------------------------
@@ -771,7 +771,7 @@ def set_residues():														#DONE
 
 	#initialise presence of particles
 	#--------------------------------
-	residues_def_pres = {False for part in residues_def["labels"]}
+	residues_def_pres = {res: False for res in residues_def["labels"]}
 
 	return
 def set_charges():														#DONE
@@ -804,14 +804,15 @@ def set_charges():														#DONE
 		#lipids
 		charges_colours["lipids"] = "#b2182b"							#dark red
 		charges_groups["lipids"] = {}
-		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]
+		#charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#for PO4 xtc the NH3/NC3 are not there to counterbalance the charge...
+		charges_groups["lipids"]["names"] = ["PO4"]
 		charges_groups["lipids"]["values"] = {}
 		charges_groups["lipids"]["values"]["PO4"] = -1
-		charges_groups["lipids"]["values"]["NH3-NC3"] = 1
+		#charges_groups["lipids"]["values"]["NH3-NC3"] = 1
 		charges_groups["lipids"]["sele"] = {}
 		charges_groups["lipids"]["sele_string"] = {}
-		charges_groups["lipids"]["sele_string"]["PO4"] = "name PO4"
-		charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
+		charges_groups["lipids"]["sele_string"]["PO4"] = "resname POPS and name PO4"
+		#charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
 		
 		#transportan
 		charges_colours["peptide"] = "#053061"							#dark blue
@@ -868,7 +869,7 @@ def set_charges():														#DONE
 
 	#initialise presence of charges groups
 	#-------------------------------------
-	charges_groups_pres = {False for charge_g in charges_groups.keys()}
+	charges_groups_pres = {charge_g: False for charge_g in charges_groups.keys()}
 
 	return
 def load_MDA_universe():												#DONE
@@ -991,11 +992,11 @@ def load_MDA_universe():												#DONE
 		for charge_g in charges_groups.keys():
 			for q in charges_groups[charge_g]["names"]:
 				charges_groups[charge_g]["sele"][q] = U.selectAtoms(charges_groups[charge_g]["sele_string"][q])
-			if charges_groups[charge_g]["sele"][q].numberOfAtoms() == 0:
-				print " ->warning: charge selection string '" + str(charges_groups[charge_g]["sele_string"][q]) + "' returned 0 atoms."
-			else:
-				charge_pres_any = True
-				charges_groups_pres[charge_g] = True
+				if charges_groups[charge_g]["sele"][q].numberOfAtoms() == 0:
+					print " ->warning: charge selection string '" + str(charges_groups[charge_g]["sele_string"][q]) + "' returned 0 atoms."
+				else:
+					charge_pres_any = True
+					charges_groups_pres[charge_g] = True
 		if not charge_pres_any:
 			print "Error: no charged particles found, use '--charges no' or supply correct charges definition."
 			sys.exit(1)
