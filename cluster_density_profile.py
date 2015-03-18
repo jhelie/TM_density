@@ -1008,6 +1008,10 @@ def load_MDA_universe():												#DONE
 		args.max_z_dist = U.dimensions[2]/float(2)
 		bins_nb_max = int(floor(args.max_z_dist/float(args.slices_thick)))
 		
+	
+	#rewind 
+	U.trajectory.rewind()
+	
 	return
 def identify_ff():														#DONE
 	print "\nReading selection file for flipflopping lipids..."
@@ -1617,7 +1621,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 			c_sele = MDAnalysis.core.AtomGroup.AtomGroup([])
 			for p_index in cluster:
 				c_sele += proteins_sele[p_index]
-			tmp_c_sele_coordinates = c_sele.coordinates()			
+			tmp_c_sele_coordinates = c_sele.coordinates()
 			dist_min_lower = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["lower"], box_dim), axis = 1)
 			dist_min_upper = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["upper"], box_dim), axis = 1)
 			dist = dist_min_upper - dist_min_lower
@@ -1716,15 +1720,17 @@ def calculate_density(box_dim, f_nb):									#DONE
 					cog_up_rotated = np.average(tmp_lip_coords_up_within_rotated, axis = 0)
 					cog_lw_rotated = np.average(tmp_lip_coords_lw_within_rotated, axis = 0)
 					norm_z_middle = cog_lw_rotated[2] + (cog_up_rotated[2] - cog_lw_rotated[2])/float(2)
-					
+										
 					#TRANSLATION
+					tmp_lip_coords_up_within_rotated[:,2] -= norm_z_middle
+					tmp_lip_coords_lw_within_rotated[:,2] -= norm_z_middle
 					#store relative coordinate of local upper and lower leaflets (once they've been rotated in the x,y plane)
 					z_upper += cog_up_rotated[2] - norm_z_middle
 					z_lower += cog_lw_rotated[2] - norm_z_middle
 					z_boundaries_nb_data += 1
-															
+										
 					#calculate cog of rotated cluster in local cluster referential
-					cluster_cog_rot = calculate_cog(np.dot(norm_rot, (tmp_c_sele_coordinates-cluster_cog).T).T, box_dim)
+					cluster_cog_rot = np.average(np.dot(norm_rot, (tmp_c_sele_coordinates-cluster_cog).T).T, axis = 0)
 				else:
 					norm_z_middle = tmp_z_mid
 									
@@ -1743,7 +1749,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 						if args.normal != 'z':
 							#switch to cluster_cog referential
 							tmp_coord -= cluster_cog
-							
+															
 							#rotate coordinates so that the local normal of the bilayer is // to the z axis
 							tmp_coord = np.dot(norm_rot, tmp_coord.T).T
 						
@@ -1753,6 +1759,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 
 							#center around middle of rotated bilayer in z
 							tmp_coord[:,2] -= norm_z_middle
+
 						else:					
 							#center around cluster in the x and y direction
 							tmp_coord[:,0] -= cluster_cog[0]
@@ -1796,7 +1803,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 							#select particles of given residues and retrieve their original coordinates
 							tmp_res_sele = c_sele.selectAtoms(residues_def["sele_string"][res])
 							tmp_coord = tmp_res_sele.coordinates()							
-							
+														
 							#performs centering/rotating of the referential
 							if args.normal != 'z':
 								#switch to cluster_cog referential
@@ -1821,7 +1828,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 												
 							#keep those within the specified radius
 							tmp_coord_within = tmp_coord[tmp_coord[:,0]**2 + tmp_coord[:,1]**2 < args.slices_radius**2]
-		
+									
 							#update particle coverage (Chang algorithm for on the fly average and std dev - actually Knuth simple version as we add element one by one)
 							tmp_pc_coord = np.shape(tmp_coord_within)[0]/float(np.shape(tmp_coord)[0])*100
 							for c in [c_size, "all sizes"]:
@@ -1944,7 +1951,7 @@ def calculate_stats():													#DONE
 				try:
 					tmp_normalisation[part_g] += np.sum(density_particles_sizes_nb[c_size][part])
 				except:
-					pass
+					pass		
 		
 		#density profile: particles
 		#--------------------------
