@@ -13,14 +13,14 @@ import os.path
 # create parser
 #=========================================================================================
 version_nb = "0.1.0"
-parser = argparse.ArgumentParser(prog = 'cluster_density_profile', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
+parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
-******************************************************
+**********************************************
 v''' + version_nb + '''
 author: Jean Helie (jean.helie@bioch.ox.ac.uk)
-git: https://github.com/jhelie/cluster_density_profile
+git: https://github.com/jhelie/TM_density
 DOI: 
-******************************************************
+**********************************************
 
 [ DESCRIPTION ]
  
@@ -496,9 +496,9 @@ if args.cutoff_leaflet != "large" and args.cutoff_leaflet != "optimise":
 #=========================================================================================
 if args.output_folder == "no":
 	if args.xtcfilename == "no":
-		args.output_folder = "cluster_density_profile_" + args.grofilename[:-4]
+		args.output_folder = "TM_density_" + args.grofilename[:-4]
 	else:
-		args.output_folder = "cluster_density_profile_" + args.xtcfilename[:-4]
+		args.output_folder = "TM_density_" + args.xtcfilename[:-4]
 if os.path.isdir(args.output_folder):
 	print "Error: folder " + str(args.output_folder) + " already exists, choose a different output name via -o."
 	sys.exit(1)
@@ -538,11 +538,11 @@ else:
 	
 	#create log
 	#----------
-	filename_log = os.getcwd() + '/' + str(args.output_folder) + '/cluster_density_profile.log'
+	filename_log = os.getcwd() + '/' + str(args.output_folder) + '/TM_density.log'
 	output_log = open(filename_log, 'w')		
-	output_log.write("[cluster_density_profile v" + str(version_nb) + "]\n")
+	output_log.write("[TM_density v" + str(version_nb) + "]\n")
 	output_log.write("\nThis folder and its content were created using the following command:\n\n")
-	tmp_log="python cluster_density_profile.py"
+	tmp_log="python TM_density.py"
 	for c in sys.argv[1:]:
 		tmp_log += " " + c
 	output_log.write(tmp_log + "\n")
@@ -606,12 +606,11 @@ def set_particles():													#DONE
 	#use default particles definition
 	#--------------------------------
 	if args.particlesfilename == "mine":
-		#particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
-		#debug
-		particles_def["labels"] = ["peptide"]
+		particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
+		#particles_def["labels"] = ["peptide"]
 		
 		#peptide
-		particles_def["group"]["peptide"] = "peptide"					#very dark grey
+		particles_def["group"]["peptide"] = "peptide"
 		particles_def["colour"]["peptide"] = "#262626"					#very dark grey
 		particles_def["sele_string"]["peptide"] = "protein"
 	
@@ -654,7 +653,7 @@ def set_particles():													#DONE
 				line = line[:-1]
 			l_content = line.split(',')
 			if len(l_content) != 4:
-				print "Error: wrong format on line " + str(l_index + 1) + " of " + str(args.particlesfilename) + ", see DESCRIPTION in cluster_density_profile --help."
+				print "Error: wrong format on line " + str(l_index + 1) + " of " + str(args.particlesfilename) + ", see DESCRIPTION in TM_density --help."
 				sys.exit(1)
 			tmp_group = l_content[0]
 			tmp_label = l_content[1]
@@ -689,7 +688,7 @@ def set_particles():													#DONE
 	#check whether a protein or peptide group has been defined to calculate residues details
 	#---------------------------------------------------------------------------------------
 	if args.residuesfilename != "no" and "peptide" not in particles_def["labels"]:
-		print "Error: no 'peptide' particles defined, residues details cannot be calculated. Use '--residues no' or update --particles. See DESCRIPTION in cluster_density_profile --help."
+		print "Error: no 'peptide' particles defined, residues details cannot be calculated. Use '--residues no' or update --particles. See DESCRIPTION in TM_density --help."
 		sys.exit(1)
 
 	#build particle groups for normalisation
@@ -737,7 +736,7 @@ def set_residues():														#DONE
 				line = line[:-1]
 			l_content = line.split(',')
 			if len(l_content) < 3:
-				print "Error: wrong format on line " + str(l_index + 1) + " of " + str(args.residuesfilename) + ", see DESCRIPTION in cluster_density_profile --help."
+				print "Error: wrong format on line " + str(l_index + 1) + " of " + str(args.residuesfilename) + ", see DESCRIPTION in TM_density --help."
 				sys.exit(1)
 			tmp_label = l_content[0]
 			tmp_color = l_content[1]
@@ -837,7 +836,7 @@ def set_charges():														#DONE
 				line = line[:-1]
 			l_content = line.split(',')
 			if len(l_content) != 5:
-				print "Error: wrong format on line " + str(l_index + 1) + " of " + str(args.chargesfilename) + ", see DESCRIPTION in cluster_density_profile --help."
+				print "Error: wrong format on line " + str(l_index + 1) + " of " + str(args.chargesfilename) + ", see DESCRIPTION in TM_density --help."
 				sys.exit(1)
 			tmp_group = l_content[0]
 			tmp_colour = l_content[1]
@@ -1287,7 +1286,7 @@ def initialise_groups():												#DONE
 		l_content = line.split(',')
 		#check format
 		if len(l_content) < 2:
-			print "Error: the format of line " + str(g_index+1) + " should be 'min,max' (see cluster_density_profile --help, note 4)."
+			print "Error: the format of line " + str(g_index+1) + " should be 'min,max' (see TM_density --help, note 4)."
 			print "->", line
 			sys.exit(1)
 		tmp_beg = int(l_content[0])
@@ -2113,9 +2112,9 @@ def density_write_particles():											#DONE
 		output_xvg = open(filename_xvg, 'w')
 		
 		#general header
-		output_txt.write("@[relative particles frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+		output_txt.write("@[relative particles frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 		output_txt.write("@Use this file as the argument of the -c option of the script 'xvg_animate' in order to make a time lapse movie of the data in " + str(tmp_file) + ".xvg.\n")
-		output_xvg.write("# [relative particles frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+		output_xvg.write("# [relative particles frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 		output_xvg.write("# cluster detection method:\n")
 		if protein_pres:
 			output_xvg.write("#  -> nb of proteins: " + str(proteins_nb) + "\n")
@@ -2187,9 +2186,9 @@ def density_write_particles():											#DONE
 			output_xvg = open(filename_xvg, 'w')
 			
 			#general header
-			output_txt.write("@[relative particles frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+			output_txt.write("@[relative particles frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 			output_txt.write("@Use this file as the argument of the -c option of the script 'xvg_animate' in order to make a time lapse movie of the data in " + str(tmp_file) + ".xvg.\n")
-			output_xvg.write("# [relative particles frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+			output_xvg.write("# [relative particles frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 			output_xvg.write("# cluster detection method:\n")
 			output_xvg.write("#  -> nb of proteins: " + str(proteins_nb) + "\n")
 			if args.m_algorithm == "min":
@@ -2259,9 +2258,9 @@ def density_write_residues():											#DONE
 		output_xvg = open(filename_xvg, 'w')
 		
 		#general header
-		output_txt.write("@[relative residues frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+		output_txt.write("@[relative residues frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 		output_txt.write("@Use this file as the argument of the -c option of the script 'xvg_animate' in order to make a time lapse movie of the data in " + str(tmp_file) + ".xvg.\n")
-		output_xvg.write("# [relative residues frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+		output_xvg.write("# [relative residues frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 		output_xvg.write("# cluster detection method:\n")
 		output_xvg.write("#  -> nb of proteins: " + str(proteins_nb) + "\n")
 		if args.m_algorithm == "min":
@@ -2344,9 +2343,9 @@ def density_write_residues():											#DONE
 			output_xvg = open(filename_xvg, 'w')
 			
 			#general header
-			output_txt.write("@[relative residues frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+			output_txt.write("@[relative residues frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 			output_txt.write("@Use this file as the argument of the -c option of the script 'xvg_animate' in order to make a time lapse movie of the data in " + str(tmp_file) + ".xvg.\n")
-			output_xvg.write("# [relative residues frequency profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+			output_xvg.write("# [relative residues frequency profile - written by TM_density v" + str(version_nb) + "]\n")
 			output_xvg.write("# cluster detection method:\n")
 			output_xvg.write("#  -> nb of proteins: " + str(proteins_nb) + "\n")
 			if args.m_algorithm == "min":
@@ -2427,9 +2426,9 @@ def density_write_charges():											#DONE
 		output_xvg = open(filename_xvg, 'w')
 		
 		#general header
-		output_txt.write("@[charge density profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+		output_txt.write("@[charge density profile - written by TM_density v" + str(version_nb) + "]\n")
 		output_txt.write("@Use this file as the argument of the -c option of the script 'xvg_animate' in order to make a time lapse movie of the data in 1_2_thickness_species.xvg.\n")
-		output_xvg.write("# [charge density profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+		output_xvg.write("# [charge density profile - written by TM_density v" + str(version_nb) + "]\n")
 		output_xvg.write("# cluster detection method:\n")
 		if protein_pres:
 			output_xvg.write("#  -> nb of proteins: " + str(proteins_nb) + "\n")
@@ -2505,9 +2504,9 @@ def density_write_charges():											#DONE
 			output_xvg = open(filename_xvg, 'w')
 			
 			#general header
-			output_txt.write("@[charge density profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+			output_txt.write("@[charge density profile - written by TM_density v" + str(version_nb) + "]\n")
 			output_txt.write("@Use this file as the argument of the -c option of the script 'xvg_animate' in order to make a time lapse movie of the data in 1_2_thickness_species.xvg.\n")
-			output_xvg.write("# [charge density profile - written by cluster_density_profile v" + str(version_nb) + "]\n")
+			output_xvg.write("# [charge density profile - written by TM_density v" + str(version_nb) + "]\n")
 			output_xvg.write("# cluster detection method:\n")
 			output_xvg.write("#  -> nb of proteins: " + str(proteins_nb) + "\n")
 			if args.m_algorithm == "min":
