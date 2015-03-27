@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.1.2"
+version_nb = "0.1.3"
 parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 **********************************************
@@ -1720,8 +1720,10 @@ def calculate_density(box_dim, f_nb):									#DONE
 					tmp_lip_coords_lw_within_rotated = np.dot(norm_rot, tmp_lip_coords_lw_within.T).T
 					
 					#identify z coord of local middle of bilayer after rotation
-					cog_up_rotated = np.average(tmp_lip_coords_up_within_rotated, axis = 0)
-					cog_lw_rotated = np.average(tmp_lip_coords_lw_within_rotated, axis = 0)
+					#cog_up_rotated = np.average(tmp_lip_coords_up_within_rotated, axis = 0)
+					#cog_lw_rotated = np.average(tmp_lip_coords_lw_within_rotated, axis = 0)
+					cog_up_rotated = np.median(tmp_lip_coords_up_within_rotated, axis = 0)
+					cog_lw_rotated = np.median(tmp_lip_coords_lw_within_rotated, axis = 0)
 					norm_z_middle = cog_lw_rotated[2] + (cog_up_rotated[2] - cog_lw_rotated[2])/float(2)
 										
 					#TRANSLATION
