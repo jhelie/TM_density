@@ -607,7 +607,6 @@ def set_particles():													#DONE
 	#--------------------------------
 	if args.particlesfilename == "mine":
 		particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
-		#particles_def["labels"] = ["peptide"]
 		
 		#peptide
 		particles_def["group"]["peptide"] = "peptide"
@@ -803,15 +802,14 @@ def set_charges():														#DONE
 		#lipids
 		charges_colours["lipids"] = "#b2182b"							#dark red
 		charges_groups["lipids"] = {}
-		#charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#for PO4 xtc the NH3/NC3 are not there to counterbalance the charge...
-		charges_groups["lipids"]["names"] = ["PO4"]
+		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#for PO4 xtc the NH3/NC3 are not there to counterbalance the charge...
 		charges_groups["lipids"]["values"] = {}
 		charges_groups["lipids"]["values"]["PO4"] = -1
-		#charges_groups["lipids"]["values"]["NH3-NC3"] = 1
+		charges_groups["lipids"]["values"]["NH3-NC3"] = 1
 		charges_groups["lipids"]["sele"] = {}
 		charges_groups["lipids"]["sele_string"] = {}
-		charges_groups["lipids"]["sele_string"]["PO4"] = "resname POPS and name PO4"
-		#charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
+		charges_groups["lipids"]["sele_string"]["PO4"] = "name PO4"
+		charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
 		
 		#transportan
 		charges_colours["peptide"] = "#053061"							#dark blue
@@ -1678,6 +1676,12 @@ def calculate_density(box_dim, f_nb):									#DONE
 					tmp_lip_coords_lw_within = tmp_lip_coords_lw[tmp_lip_coords_lw[:,0]**2 + tmp_lip_coords_lw[:,1]**2 + tmp_lip_coords_lw[:,2]**2 < args.normal_d**2]
 					if np.shape(tmp_lip_coords_up_within)[0] == 0:
 						print "\nWarning: no neighbouring particles found in the upper leaflet for current cluster (size " + str(c_size) + "). Check the --normal_d option.\n"
+						
+						#debug
+						print U.trajectory.ts.time
+						print c_sele.indices()
+						c_sele.write(str(f_nb) + "_" + str(c_counter) + ".pdb")
+						
 						continue
 					else:
 						cog_up = np.average(tmp_lip_coords_up_within, axis = 0)
