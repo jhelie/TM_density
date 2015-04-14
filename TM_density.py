@@ -179,8 +179,13 @@ The following python modules are needed :
     In this case lipids whose headgroups z value is above the average lipids z value will
     be considered to make up the upper leaflet and those whose headgroups z value is below
     the average will be considered to be in the lower leaflet.
-    This means that the bilayer should be as flat as possible in the gro file supplied in
-    order to get a meaningful outcome.
+    This means that the bilayer should be as flat as possible in the 1st frame of the xtc
+    file supplied in order to get a meaningful outcome. 
+
+	NOTE: By default the gro file is only used as a topology file and the 1st frame of the
+	xtc is used to identify leaflets. If you wish to use the gro file instead, for instance
+	in the case that the 1st frame of the xtc is not flat, you need to specify the --use_gro
+	flag: be warned that this might take a few minutes longer on large systems.
 
    (c) flipflopping lipids
     In case lipids flipflop during the trajectory, a file listing them can be supplied
@@ -259,6 +264,7 @@ Lipids identification
 --beads			: leaflet identification technique, see note 2(a)
 --flipflops		: input file with flipflopping lipids, see note 2(c)
 --leaflets	optimise: leaflet identification technique, see note 2(b)
+--use_gro			: use gro file instead of xtc, see note 2(b)
 
 Protein clusters identification
 -----------------------------------------------------
@@ -298,6 +304,7 @@ parser.add_argument('--normal_d', nargs=1, dest='normal_d', default=[50], type=f
 parser.add_argument('--beads', nargs=1, dest='beadsfilename', default=['no'], help=argparse.SUPPRESS)
 parser.add_argument('--flipflops', nargs=1, dest='selection_file_ff', default=['no'], help=argparse.SUPPRESS)
 parser.add_argument('--leaflets', nargs=1, dest='cutoff_leaflet', default=['optimise'], help=argparse.SUPPRESS)
+parser.add_argument('--use_gro', dest='use_gro', action='store_true', help=argparse.SUPPRESS)
 
 #radial and protein clusters options
 parser.add_argument('--groups', nargs=1, dest='cluster_groups_file', default=['no'], help=argparse.SUPPRESS)
@@ -430,6 +437,9 @@ if args.normal != 'z' and args.normal_d <= 0:
 	sys.exit(1)
 
 if args.xtcfilename == "no":
+	if args.use_gro:
+		print "Error: you can only use the --use_gro file if you specify an xtc file."
+		sys.exit(1)
 	if '-t' in sys.argv:
 		print "Error: -t option specified but no xtc file specified."
 		sys.exit(1)
@@ -896,6 +906,9 @@ def load_MDA_universe():												#DONE
 		nb_frames_to_process = 1
 	else:
 		print "\nLoading trajectory..."
+		if args.use_gro:
+			global U_gro
+			U_gro = Universe(args.grofilename)
 		U = Universe(args.grofilename, args.xtcfilename)
 		U_timestep = U.trajectory.dt
 		all_atoms = U.selectAtoms("all")
@@ -1232,19 +1245,55 @@ def identify_leaflets():												#DONE
 		if args.cutoff_leaflet == 'optimise':
 			print " -optimising cutoff..."
 			cutoff_value = MDAnalysis.analysis.leaflet.optimize_cutoff(U, leaflet_sele_string)
-			L = MDAnalysis.analysis.leaflet.LeafletFinder(U, leaflet_sele_string, cutoff_value[0])
+			if args.use_gro:
+				L = MDAnalysis.analysis.leaflet.LeafletFinder(U_gro, leaflet_sele_string, cutoff_value[0])
+			else:
+				L = MDAnalysis.analysis.leaflet.LeafletFinder(U, leaflet_sele_string, cutoff_value[0])
 		else:
-			L = MDAnalysis.analysis.leaflet.LeafletFinder(U, leaflet_sele_string, args.cutoff_leaflet)
+			if args.use_gro:
+				L = MDAnalysis.analysis.leaflet.LeafletFinder(U_gro, leaflet_sele_string, args.cutoff_leaflet)
+			else:
+				L = MDAnalysis.analysis.leaflet.LeafletFinder(U, leaflet_sele_string, args.cutoff_leaflet)
 	
 		if np.shape(L.groups())[0]<2:
 			print "Error: imposssible to identify 2 leaflets."
 			sys.exit(1)
+		
 		if L.group(0).centerOfGeometry()[2] > L.group(1).centerOfGeometry()[2]:
-			leaflet_sele["upper"] = L.group(0)
-			leaflet_sele["lower"] = L.group(1)
+			if args.use_gro:
+				tmp_up = L.group(0)
+				tmp_lw = L.group(1)
+			else:
+				leaflet_sele["upper"] = L.group(0)
+				leaflet_sele["lower"] = L.group(1)
 		else:
-			leaflet_sele["upper"] = L.group(1)
-			leaflet_sele["lower"] = L.group(0)
+			if args.use_gro:
+				tmp_up = L.group(1)
+				tmp_lw = L.group(0)			
+			else:
+				leaflet_sele["upper"] = L.group(1)
+				leaflet_sele["lower"] = L.group(0)
+
+		if args.use_gro:		
+			tmp_up_indices = tmp_up.indices()
+			tmp_lw_indices = tmp_lw.indices()
+			tmp_up_nb_atoms = len(tmp_up_indices)
+			tmp_lw_nb_atoms = len(tmp_lw_indices)
+			leaflet_sele["upper"] = U.selectAtoms("bynum " + str(tmp_up_indices[0] + 1))
+			leaflet_sele["lower"] = U.selectAtoms("bynum " + str(tmp_lw_indices[0] + 1))
+			for index in range(1,tmp_up_nb_atoms):
+				leaflet_sele["upper"] += U.selectAtoms("bynum " + str(tmp_up_indices[index] +1 ))
+				progress = '\r -identifying upper leaflet from gro file... ' + str(round(index/float(tmp_up_nb_atoms)*100,1)) + '%   '
+				sys.stdout.flush()
+				sys.stdout.write(progress)
+			print ''
+			for index in range(1,tmp_lw_nb_atoms):
+				leaflet_sele["lower"] += U.selectAtoms("bynum " + str(tmp_lw_indices[index] + 1))
+				progress = '\r -identifying lower leaflet from gro file... ' + str(round(index/float(tmp_lw_nb_atoms)*100,1)) + '%   '
+				sys.stdout.flush()
+				sys.stdout.write(progress)
+			print ''
+
 		leaflet_sele["both"] = leaflet_sele["lower"] + leaflet_sele["upper"]
 		if np.shape(L.groups())[0] == 2:
 			print " -found 2 leaflets: ", leaflet_sele["upper"].numberOfResidues(), '(upper) and ', leaflet_sele["lower"].numberOfResidues(), '(lower) lipids'
@@ -1253,12 +1302,37 @@ def identify_leaflets():												#DONE
 			for g in range(2, np.shape(L.groups())[0]):
 				other_lipids += L.group(g).numberOfResidues()
 			print " -found " + str(np.shape(L.groups())[0]) + " groups: " + str(leaflet_sele["upper"].numberOfResidues()) + "(upper), " + str(leaflet_sele["lower"].numberOfResidues()) + "(lower) and " + str(other_lipids) + " (others) lipids respectively"
-	#use cog:
+	#use cog and z coordinates in the GRO file supplied:
 	else:
-		leaflet_sele["both"] = U.selectAtoms(leaflet_sele_string)
-		tmp_lipids_avg_z = leaflet_sele["both"].centerOfGeometry()[2]
-		leaflet_sele["upper"] = leaflet_sele["both"].selectAtoms("prop z > " + str(tmp_lipids_avg_z))
-		leaflet_sele["lower"] = leaflet_sele["both"].selectAtoms("prop z < " + str(tmp_lipids_avg_z))
+		if args.use_gro:
+			tmp_all = U_gro.selectAtoms(leaflet_sele_string)
+			tmp_lipids_avg_z = tmp_all.centerOfGeometry()[2]
+			tmp_up = tmp_all.selectAtoms("prop z > " + str(tmp_lipids_avg_z))
+			tmp_lw = tmp_all.selectAtoms("prop z < " + str(tmp_lipids_avg_z))
+			tmp_up_indices = tmp_up.indices()
+			tmp_lw_indices = tmp_lw.indices()
+			tmp_up_nb_atoms = len(tmp_up_indices)
+			tmp_lw_nb_atoms = len(tmp_lw_indices)
+			leaflet_sele["upper"] = U.selectAtoms("bynum " + str(tmp_up_indices[0] + 1))
+			leaflet_sele["lower"] = U.selectAtoms("bynum " + str(tmp_lw_indices[0] + 1))
+			for index in range(1,tmp_up_nb_atoms):
+				leaflet_sele["upper"] += U.selectAtoms("bynum " + str(tmp_up_indices[index] + 1))
+				progress = '\r -identifying upper leaflet from gro file... ' + str(round(index/float(tmp_up_nb_atoms)*100,1)) + '%   '
+				sys.stdout.flush()
+				sys.stdout.write(progress)
+			print ''
+			for index in range(1,tmp_lw_nb_atoms):
+				leaflet_sele["lower"] += U.selectAtoms("bynum " + str(tmp_lw_indices[index] + 1))
+				progress = '\r -identifying lower leaflet from gro file... ' + str(round(index/float(tmp_lw_nb_atoms)*100,1)) + '%   '
+				sys.stdout.flush()
+				sys.stdout.write(progress)
+			leaflet_sele["both"] = leaflet_sele["upper"] + leaflet_sele["lower"]
+			print ''
+		else:
+			leaflet_sele["both"] = U.selectAtoms(leaflet_sele_string)
+			tmp_lipids_avg_z = leaflet_sele["both"].centerOfGeometry()[2]
+			leaflet_sele["upper"] = leaflet_sele["both"].selectAtoms("prop z > " + str(tmp_lipids_avg_z))
+			leaflet_sele["lower"] = leaflet_sele["both"].selectAtoms("prop z < " + str(tmp_lipids_avg_z))
 		print " -found 2 leaflets: ", leaflet_sele["upper"].numberOfResidues(), '(upper) and ', leaflet_sele["lower"].numberOfResidues(), '(lower) lipids'
 		
 	return
