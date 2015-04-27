@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.1.4"
+version_nb = "0.1.5"
 parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 **********************************************
@@ -1510,7 +1510,7 @@ def get_distances(box_dim):												#DONE
 		#pre-process: get protein coordinates
 		tmp_proteins_coords = np.zeros((proteins_nb, nb_atom_per_protein, 3))
 		for p_index in range(0, proteins_nb):
-			tmp_proteins_coords[p_index,:] = proteins_sele[p_index].coordinates()
+			tmp_proteins_coords[p_index,:] = fit_coords_into_box(proteins_sele[p_index].coordinates(), box_dim)
 
 		#store min distance between each proteins
 		dist_matrix = 100000 * np.ones((proteins_nb,proteins_nb))
@@ -1521,10 +1521,16 @@ def get_distances(box_dim):												#DONE
 	#method: use distance between cog
 	#--------------------------------
 	else:
-		tmp_proteins_cogs = np.asarray(map(lambda p_index: calculate_cog(proteins_sele[p_index], box_dim), range(0,proteins_nb)))
+		tmp_proteins_cogs = np.asarray(map(lambda p_index: calculate_cog(fit_coords_into_box(proteins_sele[p_index], box_dim), box_dim), range(0,proteins_nb)))
 		dist_matrix = MDAnalysis.analysis.distances.distance_array(np.float32(tmp_proteins_cogs), np.float32(tmp_proteins_cogs), box_dim)
 
 	return dist_matrix
+def fit_coords_into_box(coords, box_dim):
+	
+	coords[:,0] -= np.floor(coords[:,0]/float(box_size[0])) * box_dim[0]
+	coords[:,1] -= np.floor(coords[:,1]/float(box_size[1])) * box_dim[1]
+	
+	return coords
 def detect_clusters_connectivity(dist, box_dim):						#DONE
 	
 	#use networkx algorithm
@@ -1575,7 +1581,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 	
 	
 	#retrieve coordinates arrays (pre-processing saves time as MDAnalysis functions are quite slow and we need to make such calls a few times)
-	tmp_lip_coords = {l: leaflet_sele[l].coordinates() for l in ["lower","upper"]}
+	tmp_lip_coords = {l: fit_coords_into_box(leaflet_sele[l].coordinates(), box_dim) for l in ["lower","upper"]}
 	
 	#calculate middle of bilayer and relative coordinate of upper and lower leaflets assuming the z is the normal to the bilayer
 	tmp_zu = np.average(tmp_lip_coords["upper"], axis = 0)[2]
@@ -1605,7 +1611,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 				if tmp_part_sele.numberOfAtoms() > 0:
 														
 					#center z coordinates on the bilayer center z coordinate
-					tmp_coord = tmp_part_sele.coordinates()
+					tmp_coord = fit_coords_into_box(tmp_part_sele.coordinates(), box_dim)
 					tmp_coord[:,2] -= tmp_z_mid
 				
 					#deal with pbc and center axis on 0
@@ -1641,7 +1647,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 					if tmp_q_sele.numberOfAtoms() > 0:
 					
 						#center z coordinates on the bilayer center z coordinate
-						tmp_coord = tmp_q_sele.coordinates()
+						tmp_coord = fit_coords_into_box(tmp_q_sele.coordinates(), box_dim)
 						tmp_coord[:,2] -= tmp_z_mid
 
 						#deal with pbc and center axis on 0
@@ -1692,7 +1698,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 			c_sele = MDAnalysis.core.AtomGroup.AtomGroup([])
 			for p_index in cluster:
 				c_sele += proteins_sele[p_index]
-			tmp_c_sele_coordinates = c_sele.coordinates()
+			tmp_c_sele_coordinates = fit_coords_into_box(c_sele.coordinates(), box_dim)
 			dist_min_lower = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["lower"], box_dim), axis = 1)
 			dist_min_upper = np.min(MDAnalysis.analysis.distances.distance_array(tmp_c_sele_coordinates, tmp_lip_coords["upper"], box_dim), axis = 1)
 			dist = dist_min_upper - dist_min_lower
@@ -1816,7 +1822,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 							tmp_coord = tmp_c_sele_coordinates
 						else:
 							tmp_part_sele = particles_def["sele"][part]
-							tmp_coord = tmp_part_sele.coordinates()
+							tmp_coord = fit_coords_into_box(tmp_part_sele.coordinates(), box_dim)
 						
 						#performs centering/rotating of the referential
 						if args.normal != 'z':
@@ -1875,7 +1881,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 						if residues_def_pres[res]:
 							#select particles of given residues and retrieve their original coordinates
 							tmp_res_sele = c_sele.selectAtoms(residues_def["sele_string"][res])
-							tmp_coord = tmp_res_sele.coordinates()							
+							tmp_coord = fit_coords_into_box(tmp_res_sele.coordinates(), box_dim)
 														
 							#performs centering/rotating of the referential
 							if args.normal != 'z':
@@ -1939,7 +1945,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 									tmp_q_sele = charges_groups[charge_g]["sele"][q]
 								if tmp_q_sele.numberOfAtoms() > 0:
 									#retrieve original coordinates of charged sele
-									tmp_coord = tmp_q_sele.coordinates()
+									tmp_coord = fit_coords_into_box(tmp_q_sele.coordinates(), box_dim)
 									
 									#performs centering/rotating of the referential
 									if args.normal != 'z':
