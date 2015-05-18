@@ -1057,7 +1057,7 @@ def identify_ff():														#DONE
 			line = line[:-1]
 		try:
 			line_content = line.split(',')
-			if len(line_content) != 4:
+			if len(line_content) < 4:
 				print "Error: wrong format for line " + str(l_index+1) + " in " + str(args.selection_file_ff) + ", see note 4 in bilayer_perturbations --help."
 				print " ->", line
 				sys.exit(1)
