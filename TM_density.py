@@ -494,9 +494,9 @@ if args.cutoff_leaflet != "large" and args.cutoff_leaflet != "optimise":
 #=========================================================================================
 if args.output_folder == "no":
 	if args.xtcfilename == "no":
-		args.output_folder = "TM_density_" + args.grofilename[:-4]
+		args.output_folder = "TM_density_" + args.grofilename[:-4].split('/')[-1]
 	else:
-		args.output_folder = "TM_density_" + args.xtcfilename[:-4]
+		args.output_folder = "TM_density_" + args.xtcfilename[:-4].split('/')[-1]
 if os.path.isdir(args.output_folder):
 	print "Error: folder " + str(args.output_folder) + " already exists, choose a different output name via -o."
 	sys.exit(1)
@@ -1507,7 +1507,7 @@ def get_distances(box_dim):												#DONE
 		#pre-process: get protein coordinates
 		tmp_proteins_coords = np.zeros((proteins_nb, nb_atom_per_protein, 3))
 		for p_index in range(0, proteins_nb):
-			tmp_proteins_coords[p_index,:] = fit_coords_into_box(proteins_sele[p_index].coordinates(), box_dim)
+			tmp_proteins_coords[p_index,:] = coords_remove_whole(proteins_sele[p_index].coordinates(), box_dim)
 
 		#store min distance between each proteins
 		dist_matrix = 100000 * np.ones((proteins_nb,proteins_nb))
@@ -1518,7 +1518,7 @@ def get_distances(box_dim):												#DONE
 	#method: use distance between cog
 	#--------------------------------
 	else:
-		tmp_proteins_cogs = np.asarray(map(lambda p_index: calculate_cog(fit_coords_into_box(proteins_sele[p_index], box_dim), box_dim), range(0,proteins_nb)))
+		tmp_proteins_cogs = np.asarray(map(lambda p_index: calculate_cog(coords_remove_whole(proteins_sele[p_index], box_dim), box_dim), range(0,proteins_nb)))
 		dist_matrix = MDAnalysis.analysis.distances.distance_array(np.float32(tmp_proteins_cogs), np.float32(tmp_proteins_cogs), box_dim)
 
 	return dist_matrix
@@ -1596,7 +1596,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 	loc_z_axis = loc_z_axis.reshape((3,1))
 	
 	#retrieve coordinates arrays (pre-processing saves time as MDAnalysis functions are quite slow and we need to make such calls a few times)
-	tmp_lip_coords = {l: coords_remove_whole(fit_coords_into_box(leaflet_sele[l].coordinates(), box_dim)) for l in ["lower","upper"]}
+	tmp_lip_coords = {l: coords_remove_whole(leaflet_sele[l].coordinates(), box_dim) for l in ["lower","upper"]}
 	
 	#calculate middle of bilayer and relative coordinate of upper and lower leaflets assuming the z is the normal to the bilayer
 	tmp_zu = np.average(tmp_lip_coords["upper"], axis = 0)[2]
@@ -1753,7 +1753,6 @@ def calculate_density(box_dim, f_nb):									#DONE
 				#store relative coordinate of local upper and lower leaflets (once they've been rotated in the x,y plane)
 				z_upper += cog_up_rotated_z - norm_z_middle
 				z_lower += cog_lw_rotated_z - norm_z_middle
-				nb_clusters_processed += 1				
 			else:
 				z_upper += tmp_zu - tmp_z_mid
 				z_lower += tmp_zl - tmp_z_mid
