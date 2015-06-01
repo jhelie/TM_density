@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.1.6"
+version_nb = "0.1.7"
 parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 **********************************************
@@ -2151,7 +2151,7 @@ def density_write_particles():											#DONE
 		else:
 			output_xvg.write("@ title \"Relative particles frequency along z around TM clusters of size " + str(c_size) + "\"\n")
 		output_xvg.write("@ xaxis label \"z distance to bilayer center (Angstrom)\"\n")
-		output_xvg.write("@ yaxis label \"relative particles frequency (Angstrom-3)\"\n")
+		output_xvg.write("@ yaxis label \"relative particles frequency\"\n")
 		output_xvg.write("@ autoscale ONREAD xaxes\n")
 		output_xvg.write("@ TYPE XY\n")
 		output_xvg.write("@ view 0.15, 0.15, 0.95, 0.85\n")
@@ -2217,7 +2217,7 @@ def density_write_particles():											#DONE
 			#xvg metadata
 			output_xvg.write("@ title \"Relative particles frequency along z around TM clusters of sizes " + str(groups_labels[g_index]) + "\"\n")
 			output_xvg.write("@ xaxis label \"z distance to bilayer center (Angstrom)\"\n")
-			output_xvg.write("@ yaxis label \"relative particles frequency (Angstrom-3)\"\n")
+			output_xvg.write("@ yaxis label \"relative particles frequency\"\n")
 			output_xvg.write("@ autoscale ONREAD xaxes\n")
 			output_xvg.write("@ TYPE XY\n")
 			output_xvg.write("@ view 0.15, 0.15, 0.95, 0.85\n")
@@ -2292,7 +2292,7 @@ def density_write_residues():											#DONE
 		else:
 			output_xvg.write("@ title \"Relative residues frequency along z around TM clusters of size " + str(c_size) + "\"\n")
 		output_xvg.write("@ xaxis label \"z distance to bilayer center (Angstrom)\"\n")
-		output_xvg.write("@ yaxis label \"relative residues frequency (Angstrom-3)\"\n")
+		output_xvg.write("@ yaxis label \"relative residues frequency\"\n")
 		output_xvg.write("@ autoscale ONREAD xaxes\n")
 		output_xvg.write("@ TYPE XY\n")
 		output_xvg.write("@ view 0.15, 0.15, 0.95, 0.85\n")
@@ -2370,7 +2370,7 @@ def density_write_residues():											#DONE
 			#xvg metadata
 			output_xvg.write("@ title \"Relative residues frequency along z around TM clusters of sizes " + str(groups_labels[g_index]) + "\"\n")
 			output_xvg.write("@ xaxis label \"z distance to bilayer center (Angstrom)\"\n")
-			output_xvg.write("@ yaxis label \"relative residues frequency (Angstrom-3)\"\n")
+			output_xvg.write("@ yaxis label \"relative residues frequency\"\n")
 			output_xvg.write("@ autoscale ONREAD xaxes\n")
 			output_xvg.write("@ TYPE XY\n")
 			output_xvg.write("@ view 0.15, 0.15, 0.95, 0.85\n")
@@ -2593,7 +2593,7 @@ def density_graph_particles():											#DONE
 		fontP.set_size("small")
 		ax.legend(prop=fontP)
 		plt.xlabel('z distance to bilayer center [$\AA$]')
-		plt.ylabel('relative particles frequency [$\AA^{-3}$]')
+		plt.ylabel('relative particles frequency')
 		
 		#save figure
 		ax.set_xlim(-args.max_z_dist, args.max_z_dist)
@@ -2636,7 +2636,7 @@ def density_graph_particles():											#DONE
 			fontP.set_size("small")
 			ax.legend(prop=fontP)
 			plt.xlabel('z distance to bilayer center [$\AA$]')
-			plt.ylabel('relative particles frequency [$\AA^{-3}$]')
+			plt.ylabel('relative particles frequency')
 			
 			#save figure
 			ax.set_xlim(-args.max_z_dist, args.max_z_dist)
@@ -2692,7 +2692,7 @@ def density_graph_residues():											#DONE
 		fontP.set_size("small")
 		ax.legend(prop=fontP)
 		plt.xlabel('z distance to bilayer center [$\AA$]')
-		plt.ylabel('relative residues frequency [$\AA^{-3}$]')
+		plt.ylabel('relative residues frequency')
 		
 		#save figure
 		ax.set_xlim(-args.max_z_dist, args.max_z_dist)
@@ -2741,7 +2741,7 @@ def density_graph_residues():											#DONE
 			fontP.set_size("small")
 			ax.legend(prop=fontP)
 			plt.xlabel('z distance to bilayer center [$\AA$]')
-			plt.ylabel('relative residues particles frequency [$\AA^{-3}$]')
+			plt.ylabel('relative residues particles frequency')
 			
 			#save figure
 			ax.set_xlim(-args.max_z_dist, args.max_z_dist)
