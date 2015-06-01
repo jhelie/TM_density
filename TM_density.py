@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.1.7"
+version_nb = "0.1.8"
 parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 **********************************************
@@ -265,7 +265,7 @@ Protein clusters identification
 --groups		: cluster groups definition file, see note 4
 --proteins		: protein selection file, (optional, see note 3)
 --algorithm	min	: 'cog','min' or 'density', see 'DESCRIPTION'
---nx_cutoff 	8	: networkX cutoff distance for protein-protein contact (Angstrom)
+--nx_cutoff 	6	: networkX cutoff distance for protein-protein contact (Angstrom)
 --db_radius 	20	: DBSCAN search radius (Angstrom)
 --db_neighbours	3	: DBSCAN minimum number of neighbours within a circle of radius --db_radius	
 
@@ -304,7 +304,7 @@ parser.add_argument('--use_gro', dest='use_gro', action='store_true', help=argpa
 parser.add_argument('--groups', nargs=1, dest='cluster_groups_file', default=['no'], help=argparse.SUPPRESS)
 parser.add_argument('--proteins', nargs=1, dest='selection_file_prot', default=['auto'], help=argparse.SUPPRESS)
 parser.add_argument('--algorithm', dest='m_algorithm', choices=['cog','min','density'], default='min', help=argparse.SUPPRESS)
-parser.add_argument('--nx_cutoff', nargs=1, dest='cutoff_connect', default=[8], type=float, help=argparse.SUPPRESS)
+parser.add_argument('--nx_cutoff', nargs=1, dest='cutoff_connect', default=[6], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--db_radius', nargs=1, dest='dbscan_dist', default=[20], type=float, help=argparse.SUPPRESS)
 parser.add_argument('--db_neighbours', nargs=1, dest='dbscan_nb', default=[3], type=int, help=argparse.SUPPRESS)
 
