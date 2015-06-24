@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.1.8"
+version_nb = "0.1.8b"
 parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 **********************************************
@@ -787,16 +787,20 @@ def set_charges():														#DONE
 	if args.chargesfilename == "mine":
 		
 		#ions
-		charges_colours["ions"] = "#52A3CC"								#cyan colour
-		charges_groups["ions"] = {}
-		charges_groups["ions"]["names"] = ["Na+","Cl-"]
-		charges_groups["ions"]["values"] = {}
-		charges_groups["ions"]["values"]["Na+"] = 1
-		charges_groups["ions"]["values"]["Cl-"] = -1
-		charges_groups["ions"]["sele"] = {}
-		charges_groups["ions"]["sele_string"] = {}
-		charges_groups["ions"]["sele_string"]["Na+"] = "name NA+"
-		charges_groups["ions"]["sele_string"]["Cl-"] = "name CL-"
+		charges_colours["solvent"] = "#52A3CC"								#cyan colour
+		charges_groups["solvent"] = {}
+		charges_groups["solvent"]["names"] = ["Na+","Cl-","WP","WN"]
+		charges_groups["solvent"]["values"] = {}
+		charges_groups["solvent"]["values"]["Na+"] = 1
+		charges_groups["solvent"]["values"]["Cl-"] = -1
+		charges_groups["solvent"]["values"]["WP"] = 0.46
+		charges_groups["solvent"]["values"]["WM"] = -0.46
+		charges_groups["solvent"]["sele"] = {}
+		charges_groups["solvent"]["sele_string"] = {}
+		charges_groups["solvent"]["sele_string"]["Na+"] = "name NA+"
+		charges_groups["solvent"]["sele_string"]["Cl-"] = "name CL-"
+		charges_groups["solvent"]["sele_string"]["WP"] = "name WP"
+		charges_groups["solvent"]["sele_string"]["WM"] = "name WM"
 		
 		#lipids
 		charges_colours["lipids"] = "#b2182b"							#dark red
@@ -1030,17 +1034,20 @@ def identify_ff():														#DONE
 	global lipids_ff_leaflet
 	global lipids_ff_u2l_index
 	global lipids_ff_l2u_index
+	global lipids_ff_sele_string
 	global lipids_sele_ff
 	global lipids_sele_ff_bead
 	global lipids_sele_ff_bonds
 	global lipids_sele_ff_VMD_string
 	global leaflet_sele_string
+	
 	lipids_ff_nb = 0
 	lipids_ff_info = {}
 	lipids_ff_resnames = []
 	lipids_ff_leaflet = []
 	lipids_ff_u2l_index = []
 	lipids_ff_l2u_index = []
+	lipids_ff_sele_string = ""
 	lipids_sele_ff = {}
 	lipids_sele_ff_bead = {}
 	lipids_sele_ff_bonds = {}
@@ -1087,9 +1094,9 @@ def identify_ff():														#DONE
 	
 			#update: leaflet selection string
 			if l_index==0:
-				leaflet_sele_string+="(resname " + str(lip_resname) + " and resnum " + str(lip_resnum) + ")"
+				lipids_ff_sele_string += "(resname " + str(lip_resname) + " and resnum " + str(lip_resnum) + ")"
 			else:
-				leaflet_sele_string+=" or (resname " + str(lip_resname) + " and resnum " + str(lip_resnum) + ")"
+				lipids_ff_sele_string += " or (resname " + str(lip_resname) + " and resnum " + str(lip_resnum) + ")"
 
 			#create selections
 			lipids_sele_ff[l_index] = U.selectAtoms("resname " + str(lip_resname) + " and resnum " + str(lip_resnum))
@@ -1103,7 +1110,24 @@ def identify_ff():														#DONE
 		except:
 			print "Error: invalid flipflopping lipid selection string on line " + str(l_index+1) + ": '" + line + "'"
 			sys.exit(1)
-	leaflet_sele_string+=")"		
+
+	#update: leaflet selection string
+	leaflet_sele_string += lipids_ff_sele_string + ")"		
+
+	#update particle types
+	if args.selection_file_ff != "no":
+		particles_def["labels"].append("ff")
+		particles_def["group"]["ff"] = "ff"
+		particles_def["colour"]["ff"] = "k"
+		particles_def["sele_string"]["ff"] = lipids_ff_sele_string
+		particles_def["sele"]["ff"] = U.selectAtoms(particles_def["sele_string"]["ff"])
+		if particles_def["sele"]["ff"].numberOfAtoms() == 0:
+			print " ->warning: particle selection string '" + str(particles_def["sele_string"]["ff"]) + "' returned 0 atoms."
+		else:
+			particles_pres_any = True
+			particles_def_pres["ff"] = True
+
+		particles_groups["ff"] = ["ff"]
 
 	return
 def identify_proteins():												#DONE
@@ -1960,7 +1984,7 @@ def calculate_stats():													#DONE
 					tmp_normalisation[part_g] += np.sum(density_particles_sizes_nb[c_size][part])
 				except:
 					pass		
-		
+				
 		#density profile: particles
 		#--------------------------
 		for part in particles_def["labels"]:
@@ -1977,7 +2001,7 @@ def calculate_stats():													#DONE
 					density_particles_sizes_pc[c_size][part] = density_particles_sizes_nb[c_size][part] / float(tmp_normalisation[particles_def["group"][part]])
 				
 				#update scale
-				if part != "Na+" and part != "Cl-":
+				if part not in charges_groups["solvent"]["names"]:
 					max_density_particles_pc = max(max_density_particles_pc, max(density_particles_sizes_pc[c_size][part]))
 					if (part == "peptide" or part == "water") and args.residuesfilename != "no":
 						max_density_residues_pc = max(max_density_residues_pc, max(density_particles_sizes_pc[c_size][part]))
@@ -2882,9 +2906,9 @@ if args.residuesfilename != "no":
 if args.chargesfilename != "no":
 	set_charges()
 load_MDA_universe()
+identify_proteins()
 if args.selection_file_ff != "no":
 	identify_ff()
-identify_proteins()
 identify_leaflets()
 if args.cluster_groups_file != "no":
 	initialise_groups()
