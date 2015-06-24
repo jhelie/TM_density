@@ -789,7 +789,7 @@ def set_charges():														#DONE
 		#ions
 		charges_colours["solvent"] = "#52A3CC"								#cyan colour
 		charges_groups["solvent"] = {}
-		charges_groups["solvent"]["names"] = ["Na+","Cl-","WP","WN"]
+		charges_groups["solvent"]["names"] = ["Na+","Cl-","WP","WM"]
 		charges_groups["solvent"]["values"] = {}
 		charges_groups["solvent"]["values"]["Na+"] = 1
 		charges_groups["solvent"]["values"]["Cl-"] = -1
