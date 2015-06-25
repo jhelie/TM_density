@@ -817,7 +817,7 @@ def set_charges():														#DONE
 		#ions
 		charges_colours["solvent"] = "#52A3CC"								#cyan colour
 		charges_groups["solvent"] = {}
-		charges_groups["solvent"]["names"] = ["Na+","Cl-","WP","WM"]
+		charges_groups["solvent"]["names"] = ["Na+","Cl-"]
 		charges_groups["solvent"]["values"] = {}
 		charges_groups["solvent"]["values"]["Na+"] = 1
 		charges_groups["solvent"]["values"]["Cl-"] = -1
@@ -850,9 +850,9 @@ def set_charges():														#DONE
 		charges_groups["protein"]["sele"] = {}
 		charges_groups["protein"]["sele_string"] = {}
 		charges_groups["protein"]["sele_string"]["Lys"] = "resname LYS and name SC2"
-		charges_groups["protein"]["sele_string"]["Arg"] = "resname Arg and name SC2"
-		charges_groups["protein"]["sele_string"]["Asp"] = "resname LYS and name SC1"
-		charges_groups["protein"]["sele_string"]["Glu"] = "resname Arg and name SC1"
+		charges_groups["protein"]["sele_string"]["Arg"] = "resname ARG and name SC2"
+		charges_groups["protein"]["sele_string"]["Asp"] = "resname ASP and name SC1"
+		charges_groups["protein"]["sele_string"]["Glu"] = "resname GLU and name SC1"
   
 	#use martini 2.2P
 	#----------------
@@ -905,9 +905,9 @@ def set_charges():														#DONE
 		charges_groups["protein"]["sele"] = {}
 		charges_groups["protein"]["sele_string"] = {}
 		charges_groups["protein"]["sele_string"]["Lys"] = "resname LYS and name SCP"
-		charges_groups["protein"]["sele_string"]["Arg"] = "resname Arg and name SCP"
-		charges_groups["protein"]["sele_string"]["Asp"] = "resname LYS and name SCN"
-		charges_groups["protein"]["sele_string"]["Glu"] = "resname Arg and name SCN"
+		charges_groups["protein"]["sele_string"]["Arg"] = "resname ARG and name SCP"
+		charges_groups["protein"]["sele_string"]["Asp"] = "resname ASP and name SCN"
+		charges_groups["protein"]["sele_string"]["Glu"] = "resname GLU and name SCN"
 		charges_groups["protein"]["sele_string"]["Asn_p"] = "resname ASN and name SCP"
 		charges_groups["protein"]["sele_string"]["Gln_p"] = "resname GLN and name SCP"
 		charges_groups["protein"]["sele_string"]["Thr_p"] = "resname THR and name SCP"
@@ -1051,10 +1051,11 @@ def load_MDA_universe():												#DONE
 	particles_pres_any = False
 	
 	#check for presence of each particle
+	print "\nIdenfitying particles selections..."
 	for part in particles_def["labels"]:
 		particles_def["sele"][part] = U.selectAtoms(particles_def["sele_string"][part])
 		if particles_def["sele"][part].numberOfAtoms() == 0:
-			print " ->warning: particle selection string '" + str(particles_def["sele_string"][part]) + "' returned 0 atoms."
+			print " warning: particle selection string '" + str(particles_def["sele_string"][part]) + "' returned 0 atoms."
 		else:
 			particles_pres_any = True
 			particles_def_pres[part] = True
@@ -1075,10 +1076,11 @@ def load_MDA_universe():												#DONE
 	#----------------------------------
 	residues_pres_any = False
 	if args.residuesfilename != "no":
+		print "\nIdenfitying protein residues selections..."
 		for res in residues_def["labels"]:
 			residues_def["sele"][res] = U.selectAtoms(residues_def["sele_string"][res])
 			if residues_def["sele"][res].numberOfAtoms() == 0:
-				print " ->warning: residues selection string '" + str(residues_def["sele_string"][res]) + "' returned 0 atoms."
+				print " warning: residues selection string '" + str(residues_def["sele_string"][res]) + "' returned 0 atoms."
 			else:
 				residues_pres_any = True
 				residues_def_pres[res] = True
@@ -1090,11 +1092,12 @@ def load_MDA_universe():												#DONE
 	#-----------------------------------
 	charge_pres_any = False
 	if args.chargesfilename != "no":
+		print "\nIdenfitying charges selections..."
 		for charge_g in charges_groups.keys():
 			for q in charges_groups[charge_g]["names"]:
 				charges_groups[charge_g]["sele"][q] = U.selectAtoms(charges_groups[charge_g]["sele_string"][q])
 				if charges_groups[charge_g]["sele"][q].numberOfAtoms() == 0:
-					print " ->warning: charge selection string '" + str(charges_groups[charge_g]["sele_string"][q]) + "' returned 0 atoms."
+					print " warning: charge selection string '" + str(charges_groups[charge_g]["sele_string"][q]) + "' returned 0 atoms."
 				else:
 					charge_pres_any = True
 					charges_groups_pres[charge_g] = True
@@ -1147,7 +1150,7 @@ def identify_ff():														#DONE
 	with open(args.selection_file_ff) as f:
 		lines = f.readlines()
 	lipids_ff_nb = len(lines)
-	print " -found " + str(lipids_ff_nb) + " flipflopping lipids"
+	print " found " + str(lipids_ff_nb) + " flipflopping lipids"
 	leaflet_sele_string = leaflet_sele_string + " and not ("
 	for l_index in range(0,lipids_ff_nb):
 		line = lines[l_index]
@@ -1253,7 +1256,7 @@ def identify_proteins():												#DONE
 	
 	#case: selection file provided
 	if args.selection_file_prot != "auto":
-		print " -reading protein selection file..."
+		print " reading protein selection file..."
 		with open(args.selection_file_prot) as f:
 			lines = f.readlines()
 		proteins_nb=len(lines)
@@ -1262,7 +1265,7 @@ def identify_proteins():												#DONE
 			line = lines[p_index]
 			if line[-1] == "\n":
 				line = line[:-1]
-			progress='\r -creating proteins selections: ' + str(p_index+1) + '/' + str(proteins_nb) + '        '
+			progress='\r creating proteins selections: ' + str(p_index+1) + '/' + str(proteins_nb) + '        '
 			sys.stdout.flush()
 			sys.stdout.write(progress)
 			try:
@@ -1311,8 +1314,8 @@ def identify_proteins():												#DONE
 			proteins_nb += 1
 		
 		#display results
-		print " -protein found:", proteins_nb
-		print " -protein boundaries (atom numbers): see protein.sele file"
+		print " protein found:", proteins_nb
+		print " protein boundaries (atom numbers): see protein.sele file"
 		#create protein selections and save into a txt file
 		filename_sele=os.getcwd() + '/' + str(args.output_folder) + '/proteins.sele'
 		output_stat = open(filename_sele, 'w')	
@@ -1320,7 +1323,7 @@ def identify_proteins():												#DONE
 		output_stat.write("#The lines below correspond to MDAnalysis section string, e.g. U.selectAtoms(LINE)\n")
 		output_stat.write("\n")	
 		for p_index in range(0, proteins_nb):
-			progress='\r -creating proteins selections: ' + str(p_index+1) + '/' + str(proteins_nb) + '        '
+			progress='\r creating proteins selections: ' + str(p_index+1) + '/' + str(proteins_nb) + '        '
 			sys.stdout.flush()
 			sys.stdout.write(progress)
 			proteins_sele_string[p_index] = "bynum " + str(proteins_boundaries[p_index][0]) + ":" + str(proteins_boundaries[p_index][1])
@@ -1330,7 +1333,7 @@ def identify_proteins():												#DONE
 		output_stat.close()
 
 	#create charge selection for protein termini
-	if args.charges != "no" and not args.capped:
+	if args.chargesfilename != "no" and not args.capped:
 		charges_groups["protein"]["names"].append("Nter")
 		charges_groups["protein"]["names"].append("Cter")
 		charges_groups["protein"]["values"]["Nter"] = 1
@@ -1348,8 +1351,8 @@ def identify_proteins():												#DONE
 		else:
 			charge_pres_any = True
 			charges_groups_pres["protein"] = True
-			print " -added charge +1 to bead BB on residue 1"
-			print " -added charge -1 to bead BB on residue " + str(int(proteins_sele[0].numberOfResidues()))
+			print "\n added charge +1 to bead BB on residue 1"
+			print " added charge -1 to bead BB on residue " + str(int(proteins_sele[0].numberOfResidues()))
 			charges_groups_pres_q["protein"]["Nter"] = True
 			charges_groups_pres_q["protein"]["Cter"] = True
 
@@ -1379,7 +1382,7 @@ def identify_leaflets():												#DONE
 	#use LeafletFinder:
 	if args.cutoff_leaflet != 'large':
 		if args.cutoff_leaflet == 'optimise':
-			print " -optimising cutoff..."
+			print " optimising cutoff..."
 			cutoff_value = MDAnalysis.analysis.leaflet.optimize_cutoff(U, leaflet_sele_string)
 			if args.use_gro:
 				L = MDAnalysis.analysis.leaflet.LeafletFinder(U_gro, leaflet_sele_string, cutoff_value[0])
@@ -1432,12 +1435,12 @@ def identify_leaflets():												#DONE
 
 		leaflet_sele["both"] = leaflet_sele["lower"] + leaflet_sele["upper"]
 		if np.shape(L.groups())[0] == 2:
-			print " -found 2 leaflets: ", leaflet_sele["upper"].numberOfResidues(), '(upper) and ', leaflet_sele["lower"].numberOfResidues(), '(lower) lipids'
+			print " found 2 leaflets: ", leaflet_sele["upper"].numberOfResidues(), '(upper) and ', leaflet_sele["lower"].numberOfResidues(), '(lower) lipids'
 		else:
 			other_lipids=0
 			for g in range(2, np.shape(L.groups())[0]):
 				other_lipids += L.group(g).numberOfResidues()
-			print " -found " + str(np.shape(L.groups())[0]) + " groups: " + str(leaflet_sele["upper"].numberOfResidues()) + "(upper), " + str(leaflet_sele["lower"].numberOfResidues()) + "(lower) and " + str(other_lipids) + " (others) lipids respectively"
+			print " found " + str(np.shape(L.groups())[0]) + " groups: " + str(leaflet_sele["upper"].numberOfResidues()) + "(upper), " + str(leaflet_sele["lower"].numberOfResidues()) + "(lower) and " + str(other_lipids) + " (others) lipids respectively"
 	#use cog and z coordinates in the GRO file supplied:
 	else:
 		if args.use_gro:
@@ -1469,7 +1472,7 @@ def identify_leaflets():												#DONE
 			tmp_lipids_avg_z = leaflet_sele["both"].centerOfGeometry()[2]
 			leaflet_sele["upper"] = leaflet_sele["both"].selectAtoms("prop z > " + str(tmp_lipids_avg_z))
 			leaflet_sele["lower"] = leaflet_sele["both"].selectAtoms("prop z < " + str(tmp_lipids_avg_z))
-		print " -found 2 leaflets: ", leaflet_sele["upper"].numberOfResidues(), '(upper) and ', leaflet_sele["lower"].numberOfResidues(), '(lower) lipids'
+		print " found 2 leaflets: ", leaflet_sele["upper"].numberOfResidues(), '(upper) and ', leaflet_sele["lower"].numberOfResidues(), '(lower) lipids'
 		
 	return
 def initialise_groups():												#DONE
@@ -1506,7 +1509,7 @@ def initialise_groups():												#DONE
 		groups_boundaries[g_index] = [tmp_beg,tmp_end]
 		
 	#display results
-	print " -found " + str(groups_number) + " cluster groups:"
+	print " found " + str(groups_number) + " cluster groups:"
 	for g_index in range(0,groups_number):
 		if groups_boundaries[g_index][1] == 100000:
 			print "   g" + str(g_index) + " = " + str(groups_boundaries[g_index][0]) + "+"
