@@ -1,2 +1,4 @@
-# cluster_density_profile_v2
-Python script to calculate residues density distribution along the local bilayer normal
+# TM_density
+Python script to calculate transmembrane density of particles, residues and charges around transmembrane proteins.
+
+TM profiles are calculated with respect to the local bilayer normal.
