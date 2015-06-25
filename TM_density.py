@@ -91,8 +91,8 @@ DESCRIPTION
    group colour must be specified for each charge.
   
    By default charges are defined using the Martini 2.1 settings:
-    -> solvent,#52A3CC,Na+,1,resname NA+
-    -> solvent,#52A3CC,CL-,-1,resname CL-
+    -> solvent,#52A3CC,Na+,1,name NA+
+    -> solvent,#52A3CC,CL-,-1,name CL-
     -> lipids,#b2182b,-1,phosphate,name PO4
     -> lipids,#b2182b,1,amine_choline,name NH3 or name NC3
     -> peptide,#053061,Lys,1,resname LYS and name SC2
@@ -101,8 +101,8 @@ DESCRIPTION
     -> peptide,#053061,Glu,-1,resname GLU and name SC1
   
    Another default set of charges can be used by specifiying --charges 2.2P :
-    -> solvent,#52A3CC,Na+,1,resname NA+
-    -> solvent,#52A3CC,CL-,-1,resname CL-
+    -> solvent,#52A3CC,Na+,1,name NA+
+    -> solvent,#52A3CC,CL-,-1,name CL-
     -> solvent,#52A3CC,WP,0.46,name WP
     -> solvent,#52A3CC,WM,-0.46,name WM
     -> lipids,#b2182b,-1,phosphate,name PO4
