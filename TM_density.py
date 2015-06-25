@@ -47,7 +47,7 @@ DESCRIPTION
    where 'group' is used to normalise the densities of several particles. By default
    each particle type is normalised with respect to itself and the following densities
    are used:
-    -> peptide,peptide,#262626,protein
+    -> protein,protein,#262626,protein
     -> CHOL,CHOL,#bdbdbd,resname CHOL and name ROH
     -> POPC,POPC,#41ab5d,resname POPC and name PO4
     -> POPE,POPE,#6a51a3,resname POPE and name PO4
@@ -95,10 +95,10 @@ DESCRIPTION
     -> solvent,#52A3CC,CL-,-1,name CL-
     -> lipids,#b2182b,-1,phosphate,name PO4
     -> lipids,#b2182b,1,amine_choline,name NH3 or name NC3
-    -> peptide,#053061,Lys,1,resname LYS and name SC2
-    -> peptide,#053061,Arg,1,resname ARG and name SC2
-    -> peptide,#053061,Asp,-1,resname ASP and name SC1
-    -> peptide,#053061,Glu,-1,resname GLU and name SC1
+    -> protein,#053061,Lys,1,resname LYS and name SC2
+    -> protein,#053061,Arg,1,resname ARG and name SC2
+    -> protein,#053061,Asp,-1,resname ASP and name SC1
+    -> protein,#053061,Glu,-1,resname GLU and name SC1
   
    Another default set of charges can be used by specifiying --charges 2.2P :
     -> solvent,#52A3CC,Na+,1,name NA+
@@ -107,22 +107,27 @@ DESCRIPTION
     -> solvent,#52A3CC,WM,-0.46,name WM
     -> lipids,#b2182b,-1,phosphate,name PO4
     -> lipids,#b2182b,1,amine_choline,name NH3 or name NC3    
-    -> peptide,#053061,Lys,1,resname LYS and name SCP
-    -> peptide,#053061,Arg,1,resname ARG and name SCP
-    -> peptide,#053061,Asp,-1,resname ASP and name SCN
-    -> peptide,#053061,Glu,-1,resname GLU and name SCN
-    -> peptide,#053061,Asn_p,0.46,resname ASN and name SCP
-    -> peptide,#053061,Asn_n,-0.46,resname ASN and name SCN
-    -> peptide,#053061,Gln_p,0.46,resname GLN and name SCP
-    -> peptide,#053061,Gln_n,-0.46,resname GLN and name SCN
-    -> peptide,#053061,Thr_p,0.31,resname THR and name SCP
-    -> peptide,#053061,Thr_n,-0.31,resname THR and name SCN
-    -> peptide,#053061,Ser_p,0.4,resname SER and name SCP
-    -> peptide,#053061,Ser_n,-0.4,resname SER and name SCN
+    -> protein,#053061,Lys,1,resname LYS and name SCP
+    -> protein,#053061,Arg,1,resname ARG and name SCP
+    -> protein,#053061,Asp,-1,resname ASP and name SCN
+    -> protein,#053061,Glu,-1,resname GLU and name SCN
+    -> protein,#053061,Asn_p,0.46,resname ASN and name SCP
+    -> protein,#053061,Asn_n,-0.46,resname ASN and name SCN
+    -> protein,#053061,Gln_p,0.46,resname GLN and name SCP
+    -> protein,#053061,Gln_n,-0.46,resname GLN and name SCN
+    -> protein,#053061,Thr_p,0.31,resname THR and name SCP
+    -> protein,#053061,Thr_n,-0.31,resname THR and name SCN
+    -> protein,#053061,Ser_p,0.4,resname SER and name SCP
+    -> protein,#053061,Ser_n,-0.4,resname SER and name SCN
 
    By default proteins termini are considered uncapped and +1 and -1 are added to the
    first and last backbone beads ("name BB") respectively. If this is not what you want
    just use the option --capped.
+   
+   Note that for systems containing different protein species automatic addition of
+   charges at the termini has not yet been implemented: you should use --capped and
+   provide a file via --charges specifying all charged particles in the system, including
+   termini beads.
 
    If you do not want to calculate charge density, just use: '--charges no'
 
@@ -2455,7 +2460,7 @@ def density_write_residues():											#DONE
 			output_xvg.write("@ s" + str(res_index) + " legend \"" + str(res) + "\"\n")
 			output_txt.write(str(tmp_file) + "," + str(res_index+1) + "," + str(res) + "," + mcolors.rgb2hex(mcolorconv.to_rgb(residues_def["colour"][res])) + "\n")
 		output_xvg.write("@ s" + str(len(residues_def["labels"])) + " legend \"peptide\"\n")
-		output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",peptide," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["protein"])) + "\n")
+		output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",protein," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["protein"])) + "\n")
 		if water_pres:
 			output_xvg.write("@ s" + str(len(residues_def["labels"]) + 1) + " legend \"water\"\n")
 			output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 2) + ",water," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["water"])) + "\n")		
@@ -2533,7 +2538,7 @@ def density_write_residues():											#DONE
 				output_xvg.write("@ s" + str(res_index) + " legend \"" + str(res) + "\"\n")
 				output_txt.write(str(tmp_file) + "," + str(res_index+1) + "," + str(res) + "," + mcolors.rgb2hex(mcolorconv.to_rgb(residues_def["colour"][res])) + "\n")
 			output_xvg.write("@ s" + str(len(residues_def["labels"])) + " legend \"peptide\"\n")
-			output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",peptide," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["protein"])) + "\n")
+			output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",protein," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["protein"])) + "\n")
 			if water_pres:
 				output_xvg.write("@ s" + str(len(residues_def["labels"]) + 1) + " legend \"water\"\n")
 				output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 2) + ",water," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["water"])) + "\n")		
