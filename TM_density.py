@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.1.8b"
+version_nb = "0.1.9"
 parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 **********************************************
@@ -22,216 +22,242 @@ git: https://github.com/jhelie/TM_density
 DOI: 
 **********************************************
 
-[ DESCRIPTION ]
+DESCRIPTION
  
-This script plots the density profile along the z axis of groups of particles present
-around transmembrane proteins. Density profiles are broken down by the size of the
-TM clusters.
+ This script plots the density profile along the z axis of groups of particles present
+ around transmembrane proteins. Density profiles are broken down by the size of the
+ TM clusters.
 
-A file containing the charged particles can also be supplied to calculate the density
-of charges.
+ A file containing the charged particles can also be supplied to calculate the density
+ of charges.
  
-density calculation
--------------------
-Density is calculated based on a cylinder centered on the protein cluster center of 
-geometry. All the particles present in this cylinder are binned into cylinder slices
-based on their distance (along z) to the center of the lipid bilayer. The cylinder
-radius is controlled via --slices_radius and the slices thickness via --slices_thick.
+ density calculation
+ -------------------
+ Density is calculated based on a cylinder centered on the protein cluster center of 
+ geometry. All the particles present in this cylinder are binned into cylinder slices
+ based on their distance (along z) to the center of the lipid bilayer. The cylinder
+ radius is controlled via --slices_radius and the slices thickness via --slices_thick.
 
-(a) particles selection
-  You can specify the particles for which to plot the density by supplying a file
-  via the --particles option. Each line of this file should follow the following
-  format (without quotation marks):
-   -> 'group,label,colour,MDAnalysis selection string'
+ (a) particles selection
+   You can specify the particles for which to plot the density by supplying a file
+   via the --particles option. Each line of this file should follow the following
+   format (without quotation marks):
+    -> 'group,label,colour,MDAnalysis selection string'
  
-  where 'group' is used to normalise the densities of several particles. By default
-  each particle type is normalised with respect to itself and the following densities
-  are used:
-   -> peptide,peptide,#262626,protein
-   -> CHOL,CHOL,#bdbdbd,resname CHOL and name ROH
-   -> POPC,POPC,#41ab5d,resname POPC and name PO4
-   -> POPE,POPE,#6a51a3,resname POPE and name PO4
-   -> POPS,POPS,#cc4c02,resname POPS and name PO4
-   -> water,water,#1d91c0,resname W
-   -> Na+,Na+,#7bccc4,name NA+
-   -> Cl-,Cl-,#fa9fb5,name CL-
+   where 'group' is used to normalise the densities of several particles. By default
+   each particle type is normalised with respect to itself and the following densities
+   are used:
+    -> peptide,peptide,#262626,protein
+    -> CHOL,CHOL,#bdbdbd,resname CHOL and name ROH
+    -> POPC,POPC,#41ab5d,resname POPC and name PO4
+    -> POPE,POPE,#6a51a3,resname POPE and name PO4
+    -> POPS,POPS,#cc4c02,resname POPS and name PO4
+    -> water,water,#1d91c0,resname W
+    -> Na+,Na+,#7bccc4,name NA+
+    -> Cl-,Cl-,#fa9fb5,name CL-
   
-  Note that the only acceptable protein selection is the whole "protein" string and
-  that it should be labeled as "peptide" and in a group of its own also labeled
-  "peptide". If you're interested in particular sub-selections of proteins, see (b)
-  below.
+   Note that the only acceptable protein selection is the whole "protein" string and
+   that it should be labeled as "protein" and in a group of its own also labeled
+   "protein". If you're interested in particular sub-selections of proteins, see (b)
+   below.
    
-(b) protein details: residue types
-  Density profiles can be broken down further for peptides to show the density
-  distribution amongst different residue types. You can group the residues as you
-  wish by supplying a file via the --residues options. Each line of this file
-  should follow the following format:
-  -> 'label,colour,resname1,resname2,...'
+ (b) protein details: residue types
+   Density profiles can be broken down further for peptides to show the density
+   distribution amongst different residue types. You can group the residues as you
+   wish by supplying a file via the --residues options. Each line of this file
+   should follow the following format:
+   -> 'label,colour,resname1,resname2,...'
   
-  By default the following residue types are used:
-   -> basic,#253494,ARG,LYS
-   -> polar,#a1d99b,SER,THR,ASN,GLN,HIS		
-   -> negative,#99d8c9,ASP, GLU
-   -> hydrophobic,#993404,VAL,ILE,LEU,MET,PRO,CYS,PHE,TYR,TRP
-   -> backbone,#969696,ALA,GLY
+   By default the following residue types are used:
+    -> basic,#253494,ARG,LYS
+    -> polar,#a1d99b,SER,THR,ASN,GLN,HIS		
+    -> negative,#99d8c9,ASP, GLU
+    -> hydrophobic,#993404,VAL,ILE,LEU,MET,PRO,CYS,PHE,TYR,TRP
+    -> backbone,#969696,ALA,GLY
 
-  WARNING: you need to have defined a particle type called "peptide" in (a) in order
-  to show residue details.
-  If you do not want to show residue details, just use: '--residues no'.
+   WARNING: you need to have defined a particle type called "protein" in (a) in order
+   to show residue details.
+   If you do not want to show residue details, just use: '--residues no'.
 
-(c) charge density
-  You can specify which particles to take into account for the calculation of the total
-  charge density by supplying a file via the --charges option. Each line of this file
-  should follow the format (without quotation marks):
-   -> 'group_name,colour,charge_name,charge,MDAnalysis selection string for charge'
+ (c) charge density
+   You can specify which particles to take into account for the calculation of the total
+   charge density by supplying a file via the --charges option. Each line of this file
+   should follow the format (without quotation marks):
+    -> 'group_name,colour,charge_name,charge,MDAnalysis selection string for charge'
 
-  The absolute charge for each group will be plotted on the charge density profile. The
-  group colour must be specified for each charge.
+   Note that the MDAnalysis selection string should not contain any commas.
+
+   The total charge for each group will be plotted on the charge density profile. The
+   group colour must be specified for each charge.
   
-  By default the charged are defined as follows (the peptide charges correspond to that
-  of uncapped transportan):
-   -> ions,#52A3CC,Na+,1,resname NA+
-   -> ions,#52A3CC,CL-,-1,resname CL-
-   -> lipids,#b2182b,-1,phosphate,name PO4
-   -> lipids,#b2182b,1,amine_choline,name NH3 or name NC3
-   -> peptide,#053061,pos,1,(resnum 1 and resname GLY and name BB) or (resname LYS and name SC2)
-   -> peptide,#053061,neg,-1, resnum 27 and resname LEU and name BB
-  (note that the MDAnalysis selection string should not contain any commas)
+   By default charges are defined using the Martini 2.1 settings:
+    -> solvent,#52A3CC,Na+,1,resname NA+
+    -> solvent,#52A3CC,CL-,-1,resname CL-
+    -> lipids,#b2182b,-1,phosphate,name PO4
+    -> lipids,#b2182b,1,amine_choline,name NH3 or name NC3
+    -> peptide,#053061,Lys,1,resname LYS and name SC2
+    -> peptide,#053061,Arg,1,resname ARG and name SC2
+    -> peptide,#053061,Asp,-1,resname ASP and name SC1
+    -> peptide,#053061,Glu,-1,resname GLU and name SC1
+  
+   Another default set of charges can be used by specifiying --charges 2.2P :
+    -> solvent,#52A3CC,Na+,1,resname NA+
+    -> solvent,#52A3CC,CL-,-1,resname CL-
+    -> solvent,#52A3CC,WP,0.46,name WP
+    -> solvent,#52A3CC,WM,-0.46,name WM
+    -> lipids,#b2182b,-1,phosphate,name PO4
+    -> lipids,#b2182b,1,amine_choline,name NH3 or name NC3    
+    -> peptide,#053061,Lys,1,resname LYS and name SCP
+    -> peptide,#053061,Arg,1,resname ARG and name SCP
+    -> peptide,#053061,Asp,-1,resname ASP and name SCN
+    -> peptide,#053061,Glu,-1,resname GLU and name SCN
+    -> peptide,#053061,Asn_p,0.46,resname ASN and name SCP
+    -> peptide,#053061,Asn_n,-0.46,resname ASN and name SCN
+    -> peptide,#053061,Gln_p,0.46,resname GLN and name SCP
+    -> peptide,#053061,Gln_n,-0.46,resname GLN and name SCN
+    -> peptide,#053061,Thr_p,0.31,resname THR and name SCP
+    -> peptide,#053061,Thr_n,-0.31,resname THR and name SCN
+    -> peptide,#053061,Ser_p,0.4,resname SER and name SCP
+    -> peptide,#053061,Ser_n,-0.4,resname SER and name SCN
 
-  If you do not want to calculate charge density, just use: '--charges no'
+   By default proteins termini are considered uncapped and +1 and -1 are added to the
+   first and last backbone beads ("name BB") respectively. If this is not what you want
+   just use the option --capped.
 
-(d) colour definition
-  Colours can be specified using single letter code (rgbcmykw), hex code  or the name of
-  a colour map (see the matplotlib website for a list of the available colour maps).
-  In case a colour map is used, its name must be specified as the only colour.
+   If you do not want to calculate charge density, just use: '--charges no'
 
-detection of transmembrane protein clusters
--------------------------------------------
-Two clustering algorithms can be used to identify protein clusters.
+ (d) colour definition
+   Colours can be specified using single letter code (rgbcmykw), hex code  or the name of
+   a colour map (see the matplotlib website for a list of the available colour maps).
+   In case a colour map is used, its name must be specified as the only colour.
 
-(a) Connectivity based (relies on networkX module):
-  A protein is considered in a cluster if it is within a distance less than --nx_cutoff
-  from another protein. This means that a single protein can act as a connector between
-  two otherwise disconnected protein clusters.
-  This algorithm can be ran using either the minimum distante between proteins (default, 
-  --algorithm 'min') or the distance between their center of geometry (--algorithm 'cog').
-  The 'min' option scales as the square of the number of proteins and can thus be very
-  slow for large systems.
+ detection of transmembrane protein clusters
+ -------------------------------------------
+ Two clustering algorithms can be used to identify protein clusters.
 
-(b) Density based (relies on the sklearn module and its implementation of DBSCAN):
-  A protein is considered in a cluster if is surrounded by at least --db_neighbours other
-  proteins within a radius of --db_radius.
-  This density based approach is usually less suited to the detection of protein
-  clusters but as a general rule the more compact the clusters, the smaller --db_radius
-  the higher --db_neighbours can be - for details on this algorithm see its online
-  documentation.
-  This algorithm is selected by setting the --algorithm option to 'density'.
+ (a) Connectivity based (relies on networkX module):
+   A protein is considered in a cluster if it is within a distance less than --nx_cutoff
+   from another protein. This means that a single protein can act as a connector between
+   two otherwise disconnected protein clusters.
+   This algorithm can be ran using either the minimum distante between proteins (default, 
+   --algorithm 'min') or the distance between their center of geometry (--algorithm 'cog').
+   The 'min' option scales as the square of the number of proteins and can thus be very
+   slow for large systems.
 
-The identified protein clusters are considered to be transmembrane only if the closest
-lipid headgroup neighbours to the cluster particles are all within the same leaflet.
-In addition to the sizes identified, size groups can be defined - see note 7.
+ (b) Density based (relies on the sklearn module and its implementation of DBSCAN):
+   A protein is considered in a cluster if is surrounded by at least --db_neighbours other
+   proteins within a radius of --db_radius.
+   This density based approach is usually less suited to the detection of protein
+   clusters but as a general rule the more compact the clusters, the smaller --db_radius
+   the higher --db_neighbours can be - for details on this algorithm see its online
+   documentation.
+   This algorithm is selected by setting the --algorithm option to 'density'.
 
-
-[ REQUIREMENTS ]
-
-The following python modules are needed :
- - MDAnalysis
- - matplotlib
- - numpy
- - scipy
- - networkX (if option --algorithm is set to 'min' or 'cog')
- - sklearn (if option --algorithm is set to 'density')
+ The identified protein clusters are considered to be transmembrane only if the closest
+ lipid headgroup neighbours to the cluster particles are all within the same leaflet.
+ In addition to the sizes identified, size groups can be defined - see note 7.
 
 
-[ NOTES ]
+REQUIREMENTS
 
-1. The density is calculated with respect to the z axis, not the bilayer normal. So the
-   more your system deforms the noiser the less meaningful the results get.
+ The following python modules are needed :
+  - MDAnalysis
+  - matplotlib
+  - numpy
+  - scipy
+  - networkX (if option --algorithm is set to 'min' or 'cog')
+  - sklearn (if option --algorithm is set to 'density')
 
-2. Identification of the bilayer leaflets can be controlled via 3 options:
-   (a) beads
-    By default, the particles taken into account to define leaflet are:e
-    -> name PO4 or name PO3 or name B1A
+
+NOTES
+
+ 1. The density is calculated with respect to the z axis, not the bilayer normal. So the
+    more your system deforms the noiser the less meaningful the results get.
+
+ 2. Identification of the bilayer leaflets can be controlled via 3 options:
+    (a) beads
+     By default, the particles taken into account to define leaflet are:e
+     -> name PO4 or name PO3 or name B1A
    
-    Note that only lipids which contain one of the beads mentioned in the selection string
-    will be taken into account. If you wish to specify your own selection string (e.g. to
-    choose different beads or add a bead not in the default list in order to take into
-    account a particular lipid specie) you can do so by supplying a file via the --beads
-    option. This file should contain a single line that can be passed as the argument
-    to MDAnalysis selectAtoms() routine and should not contain any quotation marks, e.g.:
-     -> name PO4 or name PO3 or name B1A or name AM1
+     Note that only lipids which contain one of the beads mentioned in the selection string
+     will be taken into account. If you wish to specify your own selection string (e.g. to
+     choose different beads or add a bead not in the default list in order to take into
+     account a particular lipid specie) you can do so by supplying a file via the --beads
+     option. This file should contain a single line that can be passed as the argument
+     to MDAnalysis selectAtoms() routine and should not contain any quotation marks, e.g.:
+      -> name PO4 or name PO3 or name B1A or name AM1
         
-   (b) leaflet finding method
-    By default leaflets are identified using the MDAnalysis LeafletFinder routine and the
-    the optimum cutoff to identify 2 lipids groups is determined using the optimize_cutoff
-    routine.
-    This optimisation process can take time in large systems and you can specify your own
-    cutoff value to skip this step. For instance to use a 15 Angstrom cutoff value:
-     -> '--leaflet 15'
+    (b) leaflet finding method
+     By default leaflets are identified using the MDAnalysis LeafletFinder routine and the
+     the optimum cutoff to identify 2 lipids groups is determined using the optimize_cutoff
+     routine.
+     This optimisation process can take time in large systems and you can specify your own
+     cutoff value to skip this step. For instance to use a 15 Angstrom cutoff value:
+      -> '--leaflet 15'
+    
+     In very large systems (more then ~50,000 phospholipids) LeafletFinder (or rather the
+     networkX module that it relies on) can fail. To  avoid this you can choose not to use
+     this routine by specifying:
+      -> '--leaflet large'
+     In this case lipids whose headgroups z value is above the average lipids z value will
+     be considered to make up the upper leaflet and those whose headgroups z value is below
+     the average will be considered to be in the lower leaflet.
+     This means that the bilayer should be as flat as possible in the 1st frame of the xtc
+     file supplied in order to get a meaningful outcome. 
+
+	 NOTE: By default the gro file is only used as a topology file and the 1st frame of the
+	 xtc is used to identify leaflets. If you wish to use the gro file instead, for instance
+	 in the case that the 1st frame of the xtc is not flat, you need to specify the --use_gro
+	 flag: be warned that this might take a few minutes longer on large systems.
+
+    (c) flipflopping lipids
+     In case lipids flipflop during the trajectory, a file listing them can be supplied
+     with the --flipflops option. Each line of this file should follow the format:
+      -> 'resname,resid,starting_leaflet,z_bead'
+     where starting_leaflet is either 'upper' or 'lower' - e.g. 'POPC,145,lower,PO4'. The
+     z_bead is used to track the position of the lipid.
+     If flipflopping lipids are not specified they may add significant noise to results as
+     they prevent the correct identification of TM clusters.
+     Note that, even when specified, flipflopping lipids will be taken into account when
+     calculating densities and charges.   
+
+ 3. Proteins are detected automatically but you can specify an input file to define your
+    own selection with the --proteins option.
+    In this case the supplied file should contain on each line a protein selection string
+    that can be passed as the argument of the MDAnalysis selectAtoms() routine - for 
+    instance 'bynum 1:344'.
    
-    In very large systems (more then ~50,000 phospholipids) LeafletFinder (or rather the
-    networkX module that it relies on) can fail. To  avoid this you can choose not to use
-    this routine by specifying:
-     -> '--leaflet large'
-    In this case lipids whose headgroups z value is above the average lipids z value will
-    be considered to make up the upper leaflet and those whose headgroups z value is below
-    the average will be considered to be in the lower leaflet.
-    This means that the bilayer should be as flat as possible in the 1st frame of the xtc
-    file supplied in order to get a meaningful outcome. 
+ 4. The densities are calculated for each TM cluster size identified but can also be
+    binned into size groups.
+    The size groups are defined by supplying a file with --groups, whose lines all
+    follow the format:
+     -> 'lower_size,upper_size'
 
-	NOTE: By default the gro file is only used as a topology file and the 1st frame of the
-	xtc is used to identify leaflets. If you wish to use the gro file instead, for instance
-	in the case that the 1st frame of the xtc is not flat, you need to specify the --use_gro
-	flag: be warned that this might take a few minutes longer on large systems.
-
-   (c) flipflopping lipids
-    In case lipids flipflop during the trajectory, a file listing them can be supplied
-    with the --flipflops option. Each line of this file should follow the format:
-     -> 'resname,resid,starting_leaflet,z_bead'
-    where starting_leaflet is either 'upper' or 'lower' - e.g. 'POPC,145,lower,PO4'. The
-    z_bead is used to track the position of the lipid.
-    If flipflopping lipids are not specified they may add significant noise to results as
-    they prevent the correct identification of TM clusters.
-    Note that, even when specified, flipflopping lipids will be taken into account when
-    calculating densities and charges.   
-
-3. Proteins are detected automatically but you can specify an input file to define your
-   own selection with the --proteins option.
-   In this case the supplied file should contain on each line a protein selection string
-   that can be passed as the argument of the MDAnalysis selectAtoms() routine - for 
-   instance 'bynum 1:344'.
-   
-4. The densities are calculated for each TM cluster size identified but can also be
-   binned into size groups.
-   The size groups are defined by supplying a file with --groups, whose lines all
-   follow the format:
-    -> 'lower_size,upper_size'
-
-   Size groups definition should follow the following rules:
-    -to specify an open ended group use 'max', e.g. '3,max'
-    -groups should be ordered by increasing size and their boundaries should not overlap
-    -boundaries are inclusive so you can specify one size groups with 'size,size,colour'
-    -any cluster size not covered will be labeled as 'other'
+    Size groups definition should follow the following rules:
+     -to specify an open ended group use 'max', e.g. '3,max'
+     -groups should be ordered by increasing size and their boundaries should not overlap
+     -boundaries are inclusive so you can specify one size groups with 'size,size,colour'
+     -any cluster size not covered will be labeled as 'other'
  
-5. There are 3 possible options to determine the local normal to the bilayer. These are
-   controlled with the flags --normal and --normal_d:
-   (a) 'z': the bilayer is assumed flat in the x,y plane and the z axis is taken to be the
-    normal. Best for systems without significant curvature and local deformations. In this
-    case the --normal_d flag is ignored.
+ 5. There are 3 possible options to determine the local normal to the bilayer. These are
+    controlled with the flags --normal and --normal_d:
+    (a) 'z': the bilayer is assumed flat in the x,y plane and the z axis is taken to be the
+     normal. Best for systems without significant curvature and local deformations. In this
+     case the --normal_d flag is ignored.
 
-   (b) 'cog': in this case neighbourhing particles to current cluster of interest are
-    identified in the lower and upper leaflet. The local normal is then considered to be the
-    vector going from the cog of the lower ones to the cog of the upper ones. In each leaflet,
-    neighbouring particles are the particles selected by --beads which are within --normal_d
-    Angstrom of the cog of the protein cluster of interest.
+    (b) 'cog': in this case neighbourhing particles to current cluster of interest are
+     identified in the lower and upper leaflet. The local normal is then considered to be the
+     vector going from the cog of the lower ones to the cog of the upper ones. In each leaflet,
+     neighbouring particles are the particles selected by --beads which are within --normal_d
+     Angstrom of the cog of the protein cluster of interest.
 
-   (c) 'svd': in this case neighbourhing particles to current cluster of interest are
-    identified in the lower and upper leaflet as in (b) above. The normal of the best fitting
-    plane to these particles is obtained by performing a singular value decomposition of their
-    coordinate matrix.
+    (c) 'svd': in this case neighbourhing particles to current cluster of interest are
+     identified in the lower and upper leaflet as in (b) above. The normal of the best fitting
+     plane to these particles is obtained by performing a singular value decomposition of their
+     coordinate matrix.
 
  
-[ USAGE ]
+USAGE
 
 Option	      Default  	Description                    
 -----------------------------------------------------
@@ -243,7 +269,8 @@ Option	      Default  	Description
 -t 		10	: process every t-frames
 --particles		: definition of particles, see 'DESCRIPTION'
 --types			: definition of residue groups, see 'DESCRIPTION'
---charges		: definition of charged particles, see 'DESCRIPTION' 
+--charges	2.1	: definition of charged particles, see 'DESCRIPTION' 
+--capped		: assumes protein termini are capped
  
 Density profile options
 -----------------------------------------------------
@@ -285,7 +312,8 @@ parser.add_argument('-e', nargs=1, dest='t_end', default=[-1], type=int, help=ar
 parser.add_argument('-t', nargs=1, dest='frames_dt', default=[10], type=int, help=argparse.SUPPRESS)
 parser.add_argument('--particles', nargs=1, dest='particlesfilename', default=['mine'], help=argparse.SUPPRESS)
 parser.add_argument('--residues', nargs=1, dest='residuesfilename', default=['mine'], help=argparse.SUPPRESS)
-parser.add_argument('--charges', nargs=1, dest='chargesfilename', default=['mine'], help=argparse.SUPPRESS)
+parser.add_argument('--charges', nargs=1, dest='chargesfilename', default=['2.1'], help=argparse.SUPPRESS)
+parser.add_argument('--capped', dest='capped', action='store_true', help=argparse.SUPPRESS)
 
 #density profile options
 parser.add_argument('--range', nargs=1, dest='max_z_dist', default=[40], type=float, help=argparse.SUPPRESS)
@@ -420,7 +448,7 @@ if args.particlesfilename != "mine" and not os.path.isfile(args.particlesfilenam
 if args.residuesfilename != "no" and args.residuesfilename != "mine" and not os.path.isfile(args.residuesfilename):
 	print "Error: file " + str(args.residuesfilename) + " not found."
 	sys.exit(1)
-if args.chargesfilename != "no" and args.chargesfilename != "mine" and not os.path.isfile(args.chargesfilename):
+if args.chargesfilename not in ["no","2.1","2.2P"] and not os.path.isfile(args.chargesfilename):
 	print "Error: file " + str(args.chargesfilename) + " not found."
 	sys.exit(1)
 if args.t_end != -1 and args.t_end < args.t_start:
@@ -604,12 +632,12 @@ def set_particles():													#DONE
 	#use default particles definition
 	#--------------------------------
 	if args.particlesfilename == "mine":
-		particles_def["labels"] = ["peptide","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
+		particles_def["labels"] = ["protein","POPC","POPE","POPS","CHOL","water","Na+","Cl-"]
 		
 		#peptide
-		particles_def["group"]["peptide"] = "peptide"
-		particles_def["colour"]["peptide"] = "#262626"					#very dark grey
-		particles_def["sele_string"]["peptide"] = "protein"
+		particles_def["group"]["protein"] = "protein"
+		particles_def["colour"]["protein"] = "#262626"					#very dark grey
+		particles_def["sele_string"]["protein"] = "protein"
 	
 		#lipids
 		particles_def["group"]["CHOL"] = "CHOL"
@@ -684,7 +712,7 @@ def set_particles():													#DONE
 
 	#check whether a protein or peptide group has been defined to calculate residues details
 	#---------------------------------------------------------------------------------------
-	if args.residuesfilename != "no" and "peptide" not in particles_def["labels"]:
+	if args.residuesfilename != "no" and "protein" not in particles_def["labels"]:
 		print "Error: no 'peptide' particles defined, residues details cannot be calculated. Use '--residues no' or update --particles. See DESCRIPTION in TM_density --help."
 		sys.exit(1)
 
@@ -782,10 +810,53 @@ def set_charges():														#DONE
 	colours_map = 'custom'
 	colours_map_possible = ['Spectral', 'summer', 'coolwarm', 'pink_r', 'Set1', 'Set2', 'Set3', 'brg_r', 'Dark2', 'hot', 'PuOr_r', 'afmhot_r', 'terrain_r', 'PuBuGn_r', 'RdPu', 'gist_ncar_r', 'gist_yarg_r', 'Dark2_r', 'YlGnBu', 'RdYlBu', 'hot_r', 'gist_rainbow_r', 'gist_stern', 'gnuplot_r', 'cool_r', 'cool', 'gray', 'copper_r', 'Greens_r', 'GnBu', 'gist_ncar', 'spring_r', 'gist_rainbow', 'RdYlBu_r', 'gist_heat_r', 'OrRd_r', 'CMRmap', 'bone', 'gist_stern_r', 'RdYlGn', 'Pastel2_r', 'spring', 'terrain', 'YlOrRd_r', 'Set2_r', 'winter_r', 'PuBu', 'RdGy_r', 'spectral', 'flag_r', 'jet_r', 'RdPu_r', 'Purples_r', 'gist_yarg', 'BuGn', 'Paired_r', 'hsv_r', 'bwr', 'cubehelix', 'YlOrRd', 'Greens', 'PRGn', 'gist_heat', 'spectral_r', 'Paired', 'hsv', 'Oranges_r', 'prism_r', 'Pastel2', 'Pastel1_r', 'Pastel1', 'gray_r', 'PuRd_r', 'Spectral_r', 'gnuplot2_r', 'BuPu', 'YlGnBu_r', 'copper', 'gist_earth_r', 'Set3_r', 'OrRd', 'PuBu_r', 'ocean_r', 'brg', 'gnuplot2', 'jet', 'bone_r', 'gist_earth', 'Oranges', 'RdYlGn_r', 'PiYG', 'CMRmap_r', 'YlGn', 'binary_r', 'gist_gray_r', 'Accent', 'BuPu_r', 'gist_gray', 'flag', 'seismic_r', 'RdBu_r', 'BrBG', 'Reds', 'BuGn_r', 'summer_r', 'GnBu_r', 'BrBG_r', 'Reds_r', 'RdGy', 'PuRd', 'Accent_r', 'Blues', 'Greys', 'autumn', 'cubehelix_r', 'nipy_spectral_r', 'PRGn_r', 'Greys_r', 'pink', 'binary', 'winter', 'gnuplot', 'RdBu', 'prism', 'YlOrBr', 'coolwarm_r', 'rainbow_r', 'rainbow', 'PiYG_r', 'YlGn_r', 'Blues_r', 'YlOrBr_r', 'seismic', 'Purples', 'bwr_r', 'autumn_r', 'ocean', 'Set1_r', 'PuOr', 'PuBuGn', 'nipy_spectral', 'afmhot']
 	
-	#use default
-	#-----------
-	if args.chargesfilename == "mine":
+	#use martini 2.1
+	#---------------
+	if args.chargesfilename == "2.1":
 		
+		#ions
+		charges_colours["solvent"] = "#52A3CC"								#cyan colour
+		charges_groups["solvent"] = {}
+		charges_groups["solvent"]["names"] = ["Na+","Cl-","WP","WM"]
+		charges_groups["solvent"]["values"] = {}
+		charges_groups["solvent"]["values"]["Na+"] = 1
+		charges_groups["solvent"]["values"]["Cl-"] = -1
+		charges_groups["solvent"]["sele"] = {}
+		charges_groups["solvent"]["sele_string"] = {}
+		charges_groups["solvent"]["sele_string"]["Na+"] = "name NA+"
+		charges_groups["solvent"]["sele_string"]["Cl-"] = "name CL-"
+		
+		#lipids
+		charges_colours["lipids"] = "#b2182b"							#dark red
+		charges_groups["lipids"] = {}
+		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#remember that for PO4 only xtc the NH3/NC3 are not there to counterbalance the charge
+		charges_groups["lipids"]["values"] = {}
+		charges_groups["lipids"]["values"]["PO4"] = -1
+		charges_groups["lipids"]["values"]["NH3-NC3"] = 1
+		charges_groups["lipids"]["sele"] = {}
+		charges_groups["lipids"]["sele_string"] = {}
+		charges_groups["lipids"]["sele_string"]["PO4"] = "name PO4"
+		charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
+		
+		#protein
+		charges_colours["protein"] = "#053061"							#dark blue
+		charges_groups["protein"] = {}
+		charges_groups["protein"]["names"] = ["Lys","Arg","Asp","Glu"]
+		charges_groups["protein"]["values"] = {}
+		charges_groups["protein"]["values"]["Lys"] = 1
+		charges_groups["protein"]["values"]["Arg"] = 1
+		charges_groups["protein"]["values"]["Asp"] = -1
+		charges_groups["protein"]["values"]["Glu"] = -1
+		charges_groups["protein"]["sele"] = {}
+		charges_groups["protein"]["sele_string"] = {}
+		charges_groups["protein"]["sele_string"]["Lys"] = "resname LYS and name SC2"
+		charges_groups["protein"]["sele_string"]["Arg"] = "resname Arg and name SC2"
+		charges_groups["protein"]["sele_string"]["Asp"] = "resname LYS and name SC1"
+		charges_groups["protein"]["sele_string"]["Glu"] = "resname Arg and name SC1"
+  
+	#use martini 2.2P
+	#----------------
+	elif args.chargesfilename == "2.2P":
 		#ions
 		charges_colours["solvent"] = "#52A3CC"								#cyan colour
 		charges_groups["solvent"] = {}
@@ -805,7 +876,7 @@ def set_charges():														#DONE
 		#lipids
 		charges_colours["lipids"] = "#b2182b"							#dark red
 		charges_groups["lipids"] = {}
-		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#for PO4 xtc the NH3/NC3 are not there to counterbalance the charge...
+		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#remember that for PO4 only xtc the NH3/NC3 are not there to counterbalance the charge
 		charges_groups["lipids"]["values"] = {}
 		charges_groups["lipids"]["values"]["PO4"] = -1
 		charges_groups["lipids"]["values"]["NH3-NC3"] = 1
@@ -814,18 +885,38 @@ def set_charges():														#DONE
 		charges_groups["lipids"]["sele_string"]["PO4"] = "name PO4"
 		charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
 		
-		#transportan
-		charges_colours["peptide"] = "#053061"							#dark blue
-		charges_groups["peptide"] = {}
-		charges_groups["peptide"]["names"] = ["pos","neg"]
-		charges_groups["peptide"]["values"] = {}
-		charges_groups["peptide"]["values"]["pos"] = 1
-		charges_groups["peptide"]["values"]["neg"] = -1
-		charges_groups["peptide"]["sele"] = {}
-		charges_groups["peptide"]["sele_string"] = {}
-		charges_groups["peptide"]["sele_string"]["pos"] = "(resnum 1 and resname GLY and name BB) or (resname LYS and name SC2)"
-		charges_groups["peptide"]["sele_string"]["neg"] = "resnum 27 and resname LEU and name BB"
-	
+		#protein
+		charges_colours["protein"] = "#053061"							#dark blue
+		charges_groups["protein"] = {}
+		charges_groups["protein"]["names"] = ["Lys","Arg","Asp","Glu","Asn_p","Asn_n","Gln_p","Gln_n","Thr_p","Thr_n","Ser_p","Ser_n"]
+		charges_groups["protein"]["values"] = {}
+		charges_groups["protein"]["values"]["Lys"] = 1
+		charges_groups["protein"]["values"]["Arg"] = 1
+		charges_groups["protein"]["values"]["Asp"] = -1
+		charges_groups["protein"]["values"]["Glu"] = -1
+		charges_groups["protein"]["values"]["Asn_p"] = 0.46
+		charges_groups["protein"]["values"]["Gln_p"] = 0.46
+		charges_groups["protein"]["values"]["Thr_p"] = 0.31
+		charges_groups["protein"]["values"]["Ser_p"] = 0.4
+		charges_groups["protein"]["values"]["Asn_n"] = -0.46
+		charges_groups["protein"]["values"]["Gln_n"] = -0.46
+		charges_groups["protein"]["values"]["Thr_n"] = -0.31
+		charges_groups["protein"]["values"]["Ser_n"] = -0.4
+		charges_groups["protein"]["sele"] = {}
+		charges_groups["protein"]["sele_string"] = {}
+		charges_groups["protein"]["sele_string"]["Lys"] = "resname LYS and name SCP"
+		charges_groups["protein"]["sele_string"]["Arg"] = "resname Arg and name SCP"
+		charges_groups["protein"]["sele_string"]["Asp"] = "resname LYS and name SCN"
+		charges_groups["protein"]["sele_string"]["Glu"] = "resname Arg and name SCN"
+		charges_groups["protein"]["sele_string"]["Asn_p"] = "resname ASN and name SCP"
+		charges_groups["protein"]["sele_string"]["Gln_p"] = "resname GLN and name SCP"
+		charges_groups["protein"]["sele_string"]["Thr_p"] = "resname THR and name SCP"
+		charges_groups["protein"]["sele_string"]["Ser_p"] = "resname SER and name SCP"
+		charges_groups["protein"]["sele_string"]["Asn_n"] = "resname ASN and name SCN"
+		charges_groups["protein"]["sele_string"]["Gln_n"] = "resname GLN and name SCN"
+		charges_groups["protein"]["sele_string"]["Thr_n"] = "resname THR and name SCN"
+		charges_groups["protein"]["sele_string"]["Ser_n"] = "resname SER and name SCN"
+
 	#use user supplied
 	#-----------------
 	else:	
@@ -1008,7 +1099,7 @@ def load_MDA_universe():												#DONE
 					charge_pres_any = True
 					charges_groups_pres[charge_g] = True
 					charges_groups_pres_q[charge_g][q] = True
-		if not charge_pres_any:
+		if args.capped and not charge_pres_any:
 			print "Error: no charged particles found, use '--charges no' or supply correct charges definition."
 			sys.exit(1)
 
@@ -1237,6 +1328,30 @@ def identify_proteins():												#DONE
 			proteins_sele[p_index] = U.selectAtoms(proteins_sele_string[p_index])
 			output_stat.write(proteins_sele_string[p_index] + "\n")
 		output_stat.close()
+
+	#create charge selection for protein termini
+	if args.charges != "no" and not args.capped:
+		charges_groups["protein"]["names"].append("Nter")
+		charges_groups["protein"]["names"].append("Cter")
+		charges_groups["protein"]["values"]["Nter"] = 1
+		charges_groups["protein"]["values"]["Cter"] = -1
+		charges_groups["protein"]["sele_string"]["Nter"] = "resnum 1 and name BB"
+		charges_groups["protein"]["sele_string"]["Cter"] = "resnum " + str(int(proteins_sele[0].numberOfResidues())) + " and name BB"
+		charges_groups["protein"]["sele"]["Nter"] = U.selectAtoms(charges_groups["protein"]["sele_string"]["Nter"])
+		charges_groups["protein"]["sele"]["Cter"] = U.selectAtoms(charges_groups["protein"]["sele_string"]["Nter"])
+		if charges_groups["protein"]["sele"]["Nter"].numberOfAtoms() == 0:
+			print "Error: could not detect N terminus bead to add charge"
+			sys.exit(1)
+		elif charges_groups["protein"]["sele"]["Cter"].numberOfAtoms() == 0:
+			print "Error: could not detect C terminus bead to add charge"
+			sys.exit(1)
+		else:
+			charge_pres_any = True
+			charges_groups_pres["protein"] = True
+			print " -added charge +1 to bead BB on residue 1"
+			print " -added charge -1 to bead BB on residue " + str(int(proteins_sele[0].numberOfResidues()))
+			charges_groups_pres_q["protein"]["Nter"] = True
+			charges_groups_pres_q["protein"]["Cter"] = True
 
 	nb_atom_per_protein = proteins_sele[0].numberOfAtoms()
 	print ""
@@ -1632,7 +1747,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 	#particles
 	tmp_coord_p = {}
 	for part in particles_def["labels"]:
-		if particles_def_pres[part] and part != "peptide":
+		if particles_def_pres[part] and part != "protein":
 			tmp_coord_p[part] = coords_remove_whole(particles_def["sele"][part].coordinates(), box_dim)
 	#charges
 	if args.chargesfilename != "no":
@@ -1787,7 +1902,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 			for part in particles_def["labels"]:
 				if particles_def_pres[part]:
 					#retrieve coords
-					if part == "peptide":
+					if part == "protein":
 						tmp_coord = tmp_c_sele_coordinates
 					else:
 						tmp_coord = np.copy(tmp_coord_p[part])
@@ -1899,7 +2014,7 @@ def calculate_density(box_dim, f_nb):									#DONE
 						for q in charges_groups[charge_g]["names"]:
 							if charges_groups_pres_q[charge_g][q]:
 								#retrieve coords
-								if charge_g == "peptide":
+								if charge_g == "protein":
 									tmp_coord = coords_remove_whole(c_sele.selectAtoms(charges_groups[charge_g]["sele_string"][q]).coordinates(), box_dim)
 								else:
 									tmp_coord = np.copy(tmp_coord_q[charge_g][q])
@@ -2003,7 +2118,7 @@ def calculate_stats():													#DONE
 				#update scale
 				if part not in charges_groups["solvent"]["names"]:
 					max_density_particles_pc = max(max_density_particles_pc, max(density_particles_sizes_pc[c_size][part]))
-					if (part == "peptide" or part == "water") and args.residuesfilename != "no":
+					if (part == "protein" or part == "water") and args.residuesfilename != "no":
 						max_density_residues_pc = max(max_density_residues_pc, max(density_particles_sizes_pc[c_size][part]))
 		
 		#density profile: residues
@@ -2019,7 +2134,7 @@ def calculate_stats():													#DONE
 						sizes_coverage["residues"]["std"][c_size][res] = "nan"
 					
 					#relative density
-					density_residues_sizes_pc[c_size][res] = density_residues_sizes_nb[c_size][res] / float(tmp_normalisation["peptide"])
+					density_residues_sizes_pc[c_size][res] = density_residues_sizes_nb[c_size][res] / float(tmp_normalisation["protein"])
 
 		#density profile: charges
 		#------------------------
@@ -2076,7 +2191,7 @@ def calculate_stats():													#DONE
 	
 					#update scale
 					max_density_particles_pc = max(max_density_particles_pc, max(density_particles_groups_pc[g_index][part]))
-					if (part == "peptide" or part == "water") and args.residuesfilename != "no":
+					if (part == "protein" or part == "water") and args.residuesfilename != "no":
 						max_density_residues_pc = max(max_density_residues_pc, max(density_particles_groups_pc[g_index][part]))
 			
 			#density profile: residues
@@ -2095,7 +2210,7 @@ def calculate_stats():													#DONE
 						density_residues_groups_nb[g_index][res] /= float(tmp_normalisation)
 	
 						#relative density
-						density_residues_groups_pc[g_index][res] = density_residues_groups_nb[g_index][res] / float(np.sum(density_particles_groups_nb[g_index]["peptide"]))
+						density_residues_groups_pc[g_index][res] = density_residues_groups_nb[g_index][res] / float(np.sum(density_particles_groups_nb[g_index]["protein"]))
 		
 			#density profile: charges
 			#------------------------
@@ -2333,7 +2448,7 @@ def density_write_residues():											#DONE
 			output_xvg.write("@ s" + str(res_index) + " legend \"" + str(res) + "\"\n")
 			output_txt.write(str(tmp_file) + "," + str(res_index+1) + "," + str(res) + "," + mcolors.rgb2hex(mcolorconv.to_rgb(residues_def["colour"][res])) + "\n")
 		output_xvg.write("@ s" + str(len(residues_def["labels"])) + " legend \"peptide\"\n")
-		output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",peptide," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["peptide"])) + "\n")
+		output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",peptide," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["protein"])) + "\n")
 		if water_pres:
 			output_xvg.write("@ s" + str(len(residues_def["labels"]) + 1) + " legend \"water\"\n")
 			output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 2) + ",water," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["water"])) + "\n")		
@@ -2348,7 +2463,7 @@ def density_write_residues():											#DONE
 					results += "	" + "{:.6e}".format(density_residues_sizes_pc[c_size][res][n])
 				else:
 					results += "	0"
-			results += "	" + "{:.6e}".format(density_particles_sizes_pc[c_size]["peptide"][n])
+			results += "	" + "{:.6e}".format(density_particles_sizes_pc[c_size]["protein"][n])
 			if water_pres:
 				results += "	" + "{:.6e}".format(density_particles_sizes_pc[c_size]["water"][n])
 			output_xvg.write(results + "\n")	
@@ -2411,7 +2526,7 @@ def density_write_residues():											#DONE
 				output_xvg.write("@ s" + str(res_index) + " legend \"" + str(res) + "\"\n")
 				output_txt.write(str(tmp_file) + "," + str(res_index+1) + "," + str(res) + "," + mcolors.rgb2hex(mcolorconv.to_rgb(residues_def["colour"][res])) + "\n")
 			output_xvg.write("@ s" + str(len(residues_def["labels"])) + " legend \"peptide\"\n")
-			output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",peptide," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["peptide"])) + "\n")
+			output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 1) + ",peptide," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["protein"])) + "\n")
 			if water_pres:
 				output_xvg.write("@ s" + str(len(residues_def["labels"]) + 1) + " legend \"water\"\n")
 				output_txt.write(str(tmp_file) + "," + str(len(residues_def["labels"]) + 2) + ",water," + mcolors.rgb2hex(mcolorconv.to_rgb(particles_def["colour"]["water"])) + "\n")		
@@ -2426,7 +2541,7 @@ def density_write_residues():											#DONE
 						results += "	" + "{:.6e}".format(density_residues_groups_pc[g_index][res][n])
 					else:
 						results += "	0"
-				results += "	" + "{:.6e}".format(density_particles_groups_pc[g_index]["peptide"][n])
+				results += "	" + "{:.6e}".format(density_particles_groups_pc[g_index]["protein"][n])
 				if water_pres:
 					results += "	" + "{:.6e}".format(density_particles_groups_pc[g_index]["water"][n])
 				output_xvg.write(results + "\n")	
@@ -2707,7 +2822,7 @@ def density_graph_residues():											#DONE
 		for res in residues_def["labels"]:
 			if residues_def_pres[res]:
 				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_sizes_pc[c_size][res], color = residues_def["colour"][res], label = str(res))
-		plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
+		plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size]["protein"], color = particles_def["colour"]["protein"], label = "protein")
 		if water_pres:
 			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_sizes_pc[c_size]["water"], color = particles_def["colour"]["water"], label = "water")
 		plt.vlines(z_upper, 0, max_density_residues_pc, linestyles = 'dashed')
@@ -2756,7 +2871,7 @@ def density_graph_residues():											#DONE
 			for res in residues_def["labels"]:
 				if residues_def_pres[res]:
 					plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_residues_groups_pc[g_index][res], color = residues_def["colour"][res], label = str(res))
-			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index]["peptide"], color = particles_def["colour"]["peptide"], label = "peptide")
+			plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index]["protein"], color = particles_def["colour"]["protein"], label = "protein")
 			if water_pres:
 				plt.plot(np.arange(-args.max_z_dist,args.max_z_dist, args.slices_thick), density_particles_groups_pc[g_index]["water"], color = particles_def["colour"]["water"], label = "water")
 			plt.vlines(z_upper, 0, max_density_residues_pc, linestyles = 'dashed')
