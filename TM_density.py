@@ -285,7 +285,7 @@ Lipids identification
 --beads			: leaflet identification technique, see note 2(a)
 --flipflops		: input file with flipflopping lipids, see note 2(c)
 --leaflets	optimise: leaflet identification technique, see note 2(b)
---use_gro			: use gro file instead of xtc, see note 2(b)
+--use_gro		: use gro file instead of xtc, see note 2(b)
 
 Protein clusters identification
 -----------------------------------------------------
@@ -588,7 +588,7 @@ else:
 		shutil.copy2(args.particlesfilename,args.output_folder + "/")
 	if args.residuesfilename != "no" and args.residuesfilename != "mine":
 		shutil.copy2(args.residuesfilename,args.output_folder + "/")
-	if args.chargesfilename not in ["no","2.1","2.2p"]:
+	if args.chargesfilename not in ["no","2.1","2.2P"]:
 		shutil.copy2(args.chargesfilename,args.output_folder + "/")
 
 ##########################################################################################
