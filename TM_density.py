@@ -588,7 +588,7 @@ else:
 		shutil.copy2(args.particlesfilename,args.output_folder + "/")
 	if args.residuesfilename != "no" and args.residuesfilename != "mine":
 		shutil.copy2(args.residuesfilename,args.output_folder + "/")
-	if args.chargesfilename != "no" and args.chargesfilename != "mine":
+	if args.chargesfilename not in ["no","2.1","2.2p"]:
 		shutil.copy2(args.chargesfilename,args.output_folder + "/")
 
 ##########################################################################################
