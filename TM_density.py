@@ -829,14 +829,16 @@ def set_charges():														#DONE
 		#lipids
 		charges_colours["lipids"] = "#b2182b"							#dark red
 		charges_groups["lipids"] = {}
-		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#remember that for PO4 only xtc the NH3/NC3 are not there to counterbalance the charge
+		charges_groups["lipids"]["names"] = ["PO4","NC3","NH3"]			#remember that for PO4 only xtc the NH3/NC3 are not there to counterbalance the charge
 		charges_groups["lipids"]["values"] = {}
 		charges_groups["lipids"]["values"]["PO4"] = -1
-		charges_groups["lipids"]["values"]["NH3-NC3"] = 1
+		charges_groups["lipids"]["values"]["NC3"] = 1
+		charges_groups["lipids"]["values"]["NH3"] = 1
 		charges_groups["lipids"]["sele"] = {}
 		charges_groups["lipids"]["sele_string"] = {}
 		charges_groups["lipids"]["sele_string"]["PO4"] = "name PO4"
-		charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
+		charges_groups["lipids"]["sele_string"]["NC3"] = "name NC3"
+		charges_groups["lipids"]["sele_string"]["NH3"] = "name NH3"
 		
 		#protein
 		charges_colours["protein"] = "#053061"							#dark blue
@@ -876,14 +878,16 @@ def set_charges():														#DONE
 		#lipids
 		charges_colours["lipids"] = "#b2182b"							#dark red
 		charges_groups["lipids"] = {}
-		charges_groups["lipids"]["names"] = ["PO4","NH3-NC3"]			#remember that for PO4 only xtc the NH3/NC3 are not there to counterbalance the charge
+		charges_groups["lipids"]["names"] = ["PO4","NC3","NH3"]			#remember that for PO4 only xtc the NH3/NC3 are not there to counterbalance the charge
 		charges_groups["lipids"]["values"] = {}
 		charges_groups["lipids"]["values"]["PO4"] = -1
-		charges_groups["lipids"]["values"]["NH3-NC3"] = 1
+		charges_groups["lipids"]["values"]["NC3"] = 1
+		charges_groups["lipids"]["values"]["NH3"] = 1
 		charges_groups["lipids"]["sele"] = {}
 		charges_groups["lipids"]["sele_string"] = {}
 		charges_groups["lipids"]["sele_string"]["PO4"] = "name PO4"
-		charges_groups["lipids"]["sele_string"]["NH3-NC3"] = "name NH3 or name NC3"
+		charges_groups["lipids"]["sele_string"]["NC3"] = "name NC3"
+		charges_groups["lipids"]["sele_string"]["NH3"] = "name NH3"
 		
 		#protein
 		charges_colours["protein"] = "#053061"							#dark blue
