@@ -12,7 +12,7 @@ import os.path
 #=========================================================================================
 # create parser
 #=========================================================================================
-version_nb = "0.1.9"
+version_nb = "0.2.0"
 parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False, formatter_class = argparse.RawDescriptionHelpFormatter, description =\
 '''
 **********************************************
@@ -2108,7 +2108,7 @@ def calculate_stats():													#DONE
 			tmp_normalisation[part_g] = 0
 			for part in particles_groups[part_g]:
 				try:
-					tmp_normalisation[part_g] += np.sum(density_particles_sizes_nb[c_size][part])
+					tmp_normalisation[part_g] += np.sum(density_particles_sizes_nb[c_size][part]) * args.slices_thick
 				except:
 					pass		
 				
@@ -2180,9 +2180,17 @@ def calculate_stats():													#DONE
 	#======
 	if args.cluster_groups_file != "no":
 		for g_index in groups_sampled:
-			
-			tmp_normalisation = groups_nb_clusters[g_index] * slice_volume
-			
+
+			#calculate normalisation factor for each group for each size
+			tmp_normalisation = {}
+			for part_g in particles_groups.keys():
+				tmp_normalisation[part_g] = 0
+				for part in particles_groups[part_g]:
+					try:
+						tmp_normalisation[part_g] += np.sum(density_particles_groups_nb[g_index][part]) * args.slices_thick
+					except:
+						pass		
+
 			#density profile: particles
 			#--------------------------
 			for part in particles_def["labels"]:
@@ -2193,13 +2201,10 @@ def calculate_stats():													#DONE
 						groups_coverage["particles"]["std"][g_index][part] = round(math.sqrt(groups_coverage["particles"]["std"][g_index][part] / float(groups_coverage["particles"]["nb"][g_index][part])),1)
 					else:
 						groups_coverage["particles"]["std"][g_index][part] = "nan"
-				
-					#asbolute density
-					density_particles_groups_nb[g_index][part] /= float(tmp_normalisation)
-	
+					
 					#relative density
-					if np.sum(density_particles_groups_nb[g_index][part]) > 0:					
-						density_particles_groups_pc[g_index][part] = density_particles_groups_nb[g_index][part] / float(np.sum(density_particles_groups_nb[g_index][part]))
+					if tmp_normalisation[particles_def["group"][part]] > 0:
+						density_particles_groups_pc[g_index][part] = density_particles_groups_nb[g_index][part] / float(tmp_normalisation[particles_def["group"][part]])
 	
 					#update scale
 					max_density_particles_pc = max(max_density_particles_pc, max(density_particles_groups_pc[g_index][part]))
@@ -2217,16 +2222,14 @@ def calculate_stats():													#DONE
 							groups_coverage["residues"]["std"][g_index][res] = round(math.sqrt(groups_coverage["residues"]["std"][g_index][res] / float(groups_coverage["residues"]["nb"][g_index][res])),1)
 						else:
 							groups_coverage["residues"]["std"][g_index][res] = "nan"
-						
-						#absolute density
-						density_residues_groups_nb[g_index][res] /= float(tmp_normalisation)
-	
+							
 						#relative density
-						density_residues_groups_pc[g_index][res] = density_residues_groups_nb[g_index][res] / float(np.sum(density_particles_groups_nb[g_index]["protein"]))
+						density_residues_groups_pc[g_index][res] = density_residues_groups_nb[g_index][res] / float(tmp_normalisation[particles_def["group"][part]])
 		
 			#density profile: charges
 			#------------------------
 			if args.chargesfilename != "no":
+				tmp_normalisation = groups_nb_clusters[g_index] * slice_volume
 				for charge_g in charges_groups.keys():
 					if charges_groups_pres[charge_g]:
 						#% of particles covered
@@ -2250,6 +2253,9 @@ def calculate_stats():													#DONE
 				max_density_charges = max(max_density_charges, max(density_charges_groups[g_index]["total"]))
 				min_density_charges = min(min_density_charges, min(density_charges_groups[g_index]["total"]))
 
+	#
+	max_density_particles_pc = 0.2
+	
 	return
 
 #=========================================================================================
@@ -2754,7 +2760,7 @@ def density_graph_particles():											#DONE
 		ax.xaxis.set_ticks_position('bottom')
 		ax.yaxis.set_ticks_position('left')
 		ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
-		ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
+		ax.yaxis.set_major_locator(MaxNLocator(nbins=11))
 		ax.xaxis.labelpad = 20
 		ax.yaxis.labelpad = 20
 		plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
@@ -2797,7 +2803,7 @@ def density_graph_particles():											#DONE
 			ax.xaxis.set_ticks_position('bottom')
 			ax.yaxis.set_ticks_position('left')
 			ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
-			ax.yaxis.set_major_locator(MaxNLocator(nbins=7))
+			ax.yaxis.set_major_locator(MaxNLocator(nbins=11))
 			ax.xaxis.labelpad = 20
 			ax.yaxis.labelpad = 20
 			plt.setp(ax.xaxis.get_majorticklabels(), fontsize = "small")
