@@ -17,9 +17,8 @@ parser = argparse.ArgumentParser(prog = 'TM_density', usage='', add_help = False
 '''
 **********************************************
 v''' + version_nb + '''
-author: Jean Helie (jean.helie@bioch.ox.ac.uk)
+author: Jean Helie (jean.helie@gmail.com)
 git: https://github.com/jhelie/TM_density
-DOI: 
 **********************************************
 
 DESCRIPTION
